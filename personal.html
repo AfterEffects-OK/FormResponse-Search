@@ -349,12 +349,11 @@
       }
     }
 
-    /* ツールチップ基本設定 */
+    /* ツールチップ本体 */
     .student-item .detail-tooltip {
       visibility: hidden;
       opacity: 0;
       width: 240px;
-      max-width: 85vw;
       background-color: #0f172a;
       color: #f8fafc;
       font-size: 0.72rem;
@@ -365,13 +364,12 @@
 
       position: absolute;
       z-index: 9999;
-      top: 0;
-      left: 100%;
-      transform: translateX(6px);
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-6px);
 
       transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
       pointer-events: none;
-      box-sizing: border-box;
     }
 
     .student-item .detail-tooltip::after {
