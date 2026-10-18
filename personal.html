@@ -1,3 +1,8 @@
+/* ====================================================
+    学生公開用サイト（個別に状況をリアルタイム表示）
+  ==================================================== */
+
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -546,7 +551,7 @@
 
 <script>
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7qG7piMDI5I83ZTOb_udu67M4i-eGWa6PSaaVXH3ZRotYxHAmYj5_-5uQpS5-ymU/exec";
-  const REFRESH_INTERVAL = 10000;
+  const REFRESH_INTERVAL = 30000;
   const STORAGE_KEY = "saved_student_search_query"; // localStorage 用のキー
 
   const today = new Date();
@@ -999,6 +1004,17 @@
     });
   }
 
+  // ▼ 追加：±5秒（25秒〜35秒）のランダムなゆらぎを持たせて次回の自動更新を予約する関数
+  function scheduleNextFetch() {
+    const jitter = (Math.random() * 10000) - 5000; // -5000ms から +5000ms
+    const currentInterval = BASE_REFRESH_INTERVAL + jitter;
+
+    setTimeout(() => {
+      fetchTodayData();
+      scheduleNextFetch(); // 次回分を再予約
+    }, currentInterval);
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     // ★ ページ読み込み時に保存された検索キーワードを復元
     const searchInputEl = document.getElementById('student-search');
@@ -1015,7 +1031,9 @@
 
     updateUsageHint();
     fetchTodayData();
-    setInterval(fetchTodayData, REFRESH_INTERVAL);
+    
+    // ▼ 変更：一定間隔の setInterval ではなく、ゆらぎ付きの自動更新を開始
+    scheduleNextFetch();
   });
 
   window.addEventListener('resize', () => {
