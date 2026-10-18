@@ -361,15 +361,16 @@
       padding: 8px 10px;
       border: 1px solid #334155;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-
+      
       position: absolute;
       z-index: 9999;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-6px);
+      top: 0;
+      left: 100%;
+      transform: translateX(6px);
 
       transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
       pointer-events: none;
+      box-sizing: border-box;
     }
 
     .student-item .detail-tooltip::after {
