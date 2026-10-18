@@ -361,7 +361,7 @@
       padding: 8px 10px;
       border: 1px solid #334155;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-      
+
       position: absolute;
       z-index: 9999;
       top: 0;
@@ -509,7 +509,7 @@
 <div class="container">
   <div class="header-status">
     <h1 id="main-title">
-      <span class="title-main">フォーム 回答状況</span>
+      <span class="title-main">おさらいテスト 回答状況</span>
     </h1>
     
     <div class="header-right">
@@ -545,7 +545,7 @@
 
 <script>
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7qG7piMDI5I83ZTOb_udu67M4i-eGWa6PSaaVXH3ZRotYxHAmYj5_-5uQpS5-ymU/exec";
-  const BASE_REFRESH_INTERVAL = 30000; // 30秒を基準間隔として定義
+  const BASE_REFRESH_INTERVAL = 35000; // 35秒を基準間隔として定義
   const STORAGE_KEY = "saved_student_search_query"; // localStorage 用のキー
 
   const today = new Date();
@@ -659,24 +659,20 @@
     const searchInputEl = document.getElementById('student-search');
     const searchQuery = searchInputEl ? cleanStr(searchInputEl.value).toLowerCase() : "";
 
-    const mainTitleEl = document.getElementById('main-title');
-    const pageTitleTag = document.getElementById('page-title-tag');
-    const hasSubmissionsInTarget = globalStudentsData.length > 0;
-      
-    const baseTitleText = hasSubmissionsInTarget ? "おさらいテスト 回答状況" : "出席確認 回答状況";
-    
-    const dynamicTitleHtml = `
-      <span class="title-main">${escapeHtml(baseTitleText)}</span>
-      <span class="title-date">（${month}月${day}日分）</span>
-    `;
-    const dynamicTitlePlain = `${baseTitleText}（${month}月${day}日分）`;
-
-    mainTitleEl.innerHTML = dynamicTitleHtml;
-    pageTitleTag.textContent = dynamicTitlePlain;
-
+    // ① 検索窓が空のときの処理（ここで「あなたのフォーム回答状況」に切り替える）
     if (searchQuery === "") {
       countEl.textContent = "0";
       listEl.innerHTML = '<li class="message">名前を入力するとカードが表示されます。</li>';
+      
+      const mainTitleEl = document.getElementById('main-title');
+      const pageTitleTag = document.getElementById('page-title-tag');
+      const emptyTitleText = "あなたのフォーム回答状況";
+      
+      const dynamicTitleHtml = `<span class="title-main">${escapeHtml(emptyTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
+      const dynamicTitlePlain = `${emptyTitleText}（${month}月${day}日分）`;
+
+      mainTitleEl.innerHTML = dynamicTitleHtml;
+      pageTitleTag.textContent = dynamicTitlePlain;
       return;
     }
 
@@ -751,7 +747,6 @@
     });
 
     let uniqueAttendees = Array.from(uniqueAttendeesMap.values());
-
     uniqueAttendees = uniqueAttendees.filter(att => {
       const nameClean = cleanStr(att.name).toLowerCase();
       return nameClean === searchQuery;
@@ -759,6 +754,21 @@
 
     countEl.textContent = uniqueAttendees.length;
     listEl.innerHTML = '';
+
+    // ==========================================
+    // ▼ 【ここを追加！】カードの有無に応じたタイトル切り替え
+    // ==========================================
+    const mainTitleEl = document.getElementById('main-title');
+    const pageTitleTag = document.getElementById('page-title-tag');
+    const hasDataToShow = uniqueAttendees.length > 0;
+    const baseTitleText = hasDataToShow ? "おさらいテスト 回答状況" : "あなたのフォーム回答状況";
+
+    const dynamicTitleHtml = `<span class="title-main">${escapeHtml(baseTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
+    const dynamicTitlePlain = `${baseTitleText}（${month}月${day}日分）`;
+
+    mainTitleEl.innerHTML = dynamicTitleHtml;
+    pageTitleTag.textContent = dynamicTitlePlain;
+    // ==========================================
 
     if (uniqueAttendees.length === 0) {
       listEl.innerHTML = '<li class="message">該当する回答データが見つかりませんでした。入力内容を確認してください。</li>';
