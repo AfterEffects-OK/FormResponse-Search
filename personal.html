@@ -780,14 +780,20 @@
     // ▼ 【修正】初回オープンかリロードかを判別してログを送る
     // ==========================================
     if (searchQuery.length > 0 && searchInputEl) {
-      // セッション単位での初回かリロードかを判定
       let logNote = "個別の回答状況閲覧／リロード";
       if (!sessionStorage.getItem("has_visited_session")) {
         sessionStorage.setItem("has_visited_session", "true");
         logNote = "個別の回答状況閲覧／初回アクセス";
       }
       
-      sendAccessLog(searchInputEl.value, logNote);
+      // 💡 ヒットした学生データから科目名（または所属する講義名）を取得する例
+      // ※ もし uniqueAttendees の中に科目情報があればそれを渡します
+      let currentSubject = "-";
+      if (uniqueAttendees.length > 0 && uniqueAttendees[0].lecture) {
+        currentSubject = uniqueAttendees[0].lecture;
+      }
+
+      sendAccessLog(searchInputEl.value, currentSubject, logNote);
     }
 
     // ==========================================
@@ -1119,7 +1125,8 @@
   }
 
   // ページ読み込み時や検索実行時に呼び出すログ送信関数
-  function sendAccessLog(studentName, noteText = "個別の回答状況閲覧") {
+  // ログ送信関数（科目名も受け取れるようにする）
+  function sendAccessLog(studentName, subjectName = "-", noteText = "個別の回答状況閲覧") {
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec"; 
     
     fetch(GAS_URL, {
@@ -1128,13 +1135,14 @@
         "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify({
-        name: studentName, 
-        note: noteText // 💡 ここで「新規オープン」か「リロード」かを渡します
+        name: studentName,
+        subject: subjectName, // 💡 ここで選択科目（講義名）をGASへ送る
+        note: noteText
       })
     })
     .then(response => response.json())
     .then(result => {
-      console.log("アクセスログ記録完了 ID:", result.id, "備考:", noteText);
+      console.log("アクセスログ記録完了 ID:", result.id, "科目:", subjectName, "備考:", noteText);
     })
     .catch(error => {
       console.error("ログ記録エラー:", error);
