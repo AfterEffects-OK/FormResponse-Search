@@ -1103,6 +1103,30 @@
   function updateAllNameScales() {
     document.querySelectorAll('.student-name').forEach(adjustNameScale);
   }
+
+  // ページ読み込み時や検索実行時に呼び出すログ送信関数
+  function sendAccessLog(studentName) {
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec"; // ※デプロイしたWebアプリのURLを指定
+
+    fetch(GAS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        name: studentName,
+        note: "個別の回答状況閲覧"
+      })
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log("アクセスログ記録完了 ID:", result.id);
+    })
+    .catch(error => {
+      console.error("ログ記録エラー:", error);
+    });
+  }
+
 </script>
 
 </body>
