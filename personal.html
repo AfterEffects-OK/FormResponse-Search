@@ -782,7 +782,7 @@
     const mainTitleEl = document.getElementById('main-title');
     const pageTitleTag = document.getElementById('page-title-tag');
     const hasDataToShow = uniqueAttendees.length > 0;
-    const baseTitleText = hasDataToShow ? "おさらいテスト 回答状況" : "あなたのフォーム回答状況";
+    const baseTitleText = hasDataToShow ? "出席確認 回答状況" : "おさらいテスト 回答状況";
 
     const dynamicTitleHtml = `<span class="title-main">${escapeHtml(baseTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
     const dynamicTitlePlain = `${baseTitleText}（${month}月${day}日分）`;
