@@ -649,6 +649,8 @@
     }
     previousHash = response.hash;
 
+    sendAutoRefreshLog();
+
     window.globalOfficialAbsences = (response && response.officialAbsences) ? response.officialAbsences : [];
 
     globalStudentsData = (response && response.students) ? response.students : [];
@@ -780,14 +782,14 @@
     // ▼ 【修正】初回オープンかリロードかを判別してログを送る
     // ==========================================
     if (searchQuery.length > 0 && searchInputEl) {
+      // 💡 注意：自動更新による再描画と区別するため、必要に応じてフラグ制御も可能ですが
+      // まずはセッションの初回/リロード判定としてここで送信します
       let logNote = "個別の回答状況閲覧／リロード";
       if (!sessionStorage.getItem("has_visited_session")) {
         sessionStorage.setItem("has_visited_session", "true");
         logNote = "個別の回答状況閲覧／初回アクセス";
       }
       
-      // 💡 ヒットした学生データから科目名（または所属する講義名）を取得する例
-      // ※ もし uniqueAttendees の中に科目情報があればそれを渡します
       let currentSubject = "-";
       if (uniqueAttendees.length > 0 && uniqueAttendees[0].lecture) {
         currentSubject = uniqueAttendees[0].lecture;
@@ -1148,6 +1150,23 @@
       console.error("ログ記録エラー:", error);
     });
   }
+
+  // 自動更新による表示内容の切り替え時に呼ぶ関数（重複防止つき）
+    function sendAutoRefreshLog() {
+      const searchInputEl = document.getElementById('student-search');
+      const searchQuery = searchInputEl ? searchInputEl.value.trim() : "";
+
+      // 検索窓に文字が入っているときだけ自動更新ログを送る
+      if (searchQuery.length > 0) {
+        let currentSubject = "-";
+        if (typeof uniqueAttendees !== 'undefined' && uniqueAttendees.length > 0 && uniqueAttendees[0].lecture) {
+          currentSubject = uniqueAttendees[0].lecture;
+        }
+
+        // ▼ 備考に「表示内容更新」を指定して送信
+        sendAccessLog(searchInputEl.value, currentSubject, "個別の回答状況閲覧／表示内容更新");
+      }
+    }
 
 </script>
 
