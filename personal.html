@@ -502,6 +502,25 @@
       scrollbar-width: thin;
       scrollbar-color: #1f2937 #0b0f19;
     }
+
+    /* 日付と最終更新のコンテナ設定 */
+    .date-info {
+      display: flex;
+      flex-wrap: wrap; /* 幅が足りなくなったら折り返す */
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 広い画面ではパイプを表示し、狭い画面（折り返し時）には非表示にする */
+    @media screen and (max-width: 600px) {
+      .status-pipe {
+        display: none !important; /* 折り返したときはパイプを隠す */
+      }
+      .status-update-part {
+        width: 100%; /* 「最終更新」を次の行に強制的に折り返す */
+      }
+    }
+    
   </style>
 </head>
 <body>
@@ -514,7 +533,9 @@
     
     <div class="header-right">
       <div class="date-info">
-        判定基準日: <span id="current-date"></span> | 最終更新: <span id="last-update">-</span>
+        <span class="status-date-part">判定基準日: <span id="current-date"></span></span>
+        <span class="status-pipe"> | </span>
+        <span class="status-update-part">最終更新: <span id="last-update">-</span></span>
       </div>
       <div class="status-badge">
         <span class="status-dot"></span> 自動更新中
