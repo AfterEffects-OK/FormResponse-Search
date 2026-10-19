@@ -777,6 +777,13 @@
     listEl.innerHTML = '';
 
     // ==========================================
+    // ▼ 【ここに追加】有効な検索が行われたときにログを送信する
+    // ==========================================
+    if (searchQuery.length > 0 && searchInputEl) {
+      sendAccessLog(searchInputEl.value);
+    }
+
+    // ==========================================
     // ▼ 【ここを追加！】カードの有無に応じたタイトル切り替え
     // ==========================================
     const mainTitleEl = document.getElementById('main-title');
