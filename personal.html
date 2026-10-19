@@ -785,10 +785,15 @@
 
     // ▼ カードの中に「未回答」のバッジが表示されている学生が1人でもいるか判定する
     const hasUnansweredBadge = uniqueAttendees.some(att => {
-      // ※学生のデータが未回答（かつ全体の科目で未回答ではない状態＝バッジが出る条件）に合致するか判定
-      const studentLecture = `科目_${att.subjectId}`;
+      const studentName = cleanStr(att.name);
+      const studentLecture = cleanStr(att.lecture);
+      const currentKey = `${studentLecture}_${studentName}`;
+      
+      const answeredData = answeredMap.get(currentKey);
       const isLectureAllUnanswered = !activeLecturesWithResponses.has(studentLecture);
-      return !att.time && !isLectureAllUnanswered;
+      
+      // テストの回答データがない（＝「未回答」バッジが表示される条件）かどうかを判定
+      return !answeredData && !isLectureAllUnanswered;
     });
 
     // タイトルの出し分け
