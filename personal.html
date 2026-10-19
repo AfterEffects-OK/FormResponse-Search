@@ -777,10 +777,17 @@
     listEl.innerHTML = '';
 
     // ==========================================
-    // ▼ 【ここに追加】有効な検索が行われたときにログを送信する
+    // ▼ 【修正】初回オープンかリロードかを判別してログを送る
     // ==========================================
     if (searchQuery.length > 0 && searchInputEl) {
-      sendAccessLog(searchInputEl.value);
+      // セッション単位での初回かリロードかを判定
+      let logNote = "個別の回答状況閲覧／リロード";
+      if (!sessionStorage.getItem("has_visited_session")) {
+        sessionStorage.setItem("has_visited_session", "true");
+        logNote = "個別の回答状況閲覧／初回アクセス";
+      }
+      
+      sendAccessLog(searchInputEl.value, logNote);
     }
 
     // ==========================================
@@ -1112,22 +1119,22 @@
   }
 
   // ページ読み込み時や検索実行時に呼び出すログ送信関数
-  function sendAccessLog(studentName) {
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec"; // ※デプロイしたWebアプリのURLを指定
-
+  function sendAccessLog(studentName, noteText = "個別の回答状況閲覧") {
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec"; 
+    
     fetch(GAS_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify({
-        name: studentName,
-        note: "個別の回答状況閲覧"
+        name: studentName, 
+        note: noteText // 💡 ここで「新規オープン」か「リロード」かを渡します
       })
     })
     .then(response => response.json())
     .then(result => {
-      console.log("アクセスログ記録完了 ID:", result.id);
+      console.log("アクセスログ記録完了 ID:", result.id, "備考:", noteText);
     })
     .catch(error => {
       console.error("ログ記録エラー:", error);
