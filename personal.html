@@ -782,7 +782,20 @@
     const mainTitleEl = document.getElementById('main-title');
     const pageTitleTag = document.getElementById('page-title-tag');
     const hasDataToShow = uniqueAttendees.length > 0;
-    const baseTitleText = hasDataToShow ? "出席確認 回答状況" : "おさらいテスト 回答状況";
+    
+    // ▼ カードがあって「未回答」の状態（＝未回答テストがある場合など）を判定
+    // ※ 実際の判定ロジックに合わせて、未回答タグの有無を判定する変数や条件を指定します
+    // 例として、もし未回答タグの有無を判定するフラグや変数がある場合はここで切り替えます
+    const hasUnansweredTag = uniqueAttendees.some(att => {
+      // 例: 各カードのデータに未回答を示すフラグや条件がある場合の判定
+      return att.isUnanswered || false; 
+    });
+
+    // 「カードがあって未回答タグが表示されている場合はおさらいテスト」
+    // 「カードがあって未回答タグがない（表示されていない）場合は出席確認」
+    const baseTitleText = !hasDataToShow 
+      ? "あなたのフォーム回答状況" 
+      : (hasUnansweredTag ? "おさらいテスト 回答状況" : "出席確認 回答状況");
 
     const dynamicTitleHtml = `<span class="title-main">${escapeHtml(baseTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
     const dynamicTitlePlain = `${baseTitleText}（${month}月${day}日分）`;
