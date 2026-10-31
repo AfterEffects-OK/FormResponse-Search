@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title-tag">総合ダッシュボード</title>
+  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/AfterEffects-OK/PortalSite/main/FormResponse-Search.png">
+  <style>
+    /* ========================================== */
+    /* 共通・テーマ設定 (CSS変数)                 */
+    /* ========================================== */
+    :root {
+      --primary: #059669;
+      --primary-hover: #047857;
+      --primary-light: #ecfdf5;
+      --bg-color: #0b0f19;
+      --card-bg: #111827;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1f2937;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    body.dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --primary-light: #064e3b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", Meiryo, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 12px;
+      color: var(--text-main);
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .app-section {
+      max-width: 1250px;
+      width: 100%;
+      margin: 0 auto 30px auto;
+      background: var(--card-bg);
+      padding: 24px 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* ========================================== */
+    /* セクション1: personal.html 側（回答状況）    */
+    /* ========================================== */
+    .header-status {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    h1 {
+      font-size: 1.1rem;
+      margin: 0;
+      color: #60a5fa;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .title-main { white-space: nowrap; }
+    .title-date { white-space: nowrap; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .date-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+    }
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 12px;
+      background-color: #064e3b;
+      color: #4ade80;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      border: 1px solid #065f46;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .count-badge, .lecture-buttons-container { display: none !important; }
+
+    .controls-container {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .search-input {
+      background-color: #1e293b;
+      color: #f8fafc;
+      border: 2px solid #3b82f6;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+    }
+    .search-input:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+    }
+    .search-input::placeholder { color: #94a3b8; }
+    .usage-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin: 0 0 4px 0;
+      letter-spacing: 0.02em;
+    }
+
+    .student-grid {
+      display: grid;
+      grid-template-rows: repeat(5, auto);
+      grid-auto-flow: column;
+      gap: 12px 6px;
+      list-style: none;
+      padding: 20px 12px;
+      margin: 0;
+      overflow-x: auto;
+      align-content: start;
+    }
+    .student-item {
+      background: #ffffff;
+      padding: 4px 6px;
+      border: 1.5px solid #ffffff;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box;
+      max-width: 200px;
+      width: 100%;
+      transition: border-color 0.3s ease;
+      position: relative !important;
+      overflow: visible !important;
+      z-index: 1;
+      cursor: pointer;
+    }
+    .student-item:hover {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+      z-index: 100 !important;
+    }
+    .student-item.unanswered {
+      background: #1e293b;
+      border: 1px dashed #ef4444;
+    }
+    .student-item.unanswered .student-name { color: #fca5a5; }
+    .name-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      margin: 4px 0 2px 0;
+      padding: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .name-wrapper {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+    .student-name {
+      font-weight: bold;
+      font-size: 1.15rem;
+      color: #0f172a;
+      white-space: nowrap;
+      display: inline-block;
+      transform-origin: left center;
+      line-height: 1.1;
+      margin: 0;
+      padding: 0;
+    }
+    .report-icon {
+      font-size: 0.55rem;
+      background-color: #2563eb;
+      color: #ffffff;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      flex-shrink: 0;
+      line-height: 1;
+      border: 1px solid #1d4ed8;
+      white-space: nowrap;
+    }
+    .unanswered-badge {
+      font-size: 0.55rem;
+      background-color: #7f1d1d;
+      color: #fca5a5;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-weight: bold;
+      border: 1px solid #991b1b;
+      line-height: 1;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .absent-badge {
+      font-size: 0.55rem;
+      background-color: #374151;
+      color: #f3f4f6;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-weight: bold;
+      border: 1px solid #4b5563;
+      line-height: 1;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .student-item.official-absence {
+      border: 1px dashed #38bdf8;
+      background: #0f172a;
+    }
+    .badge-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .timestamp {
+      font-size: 0.55rem;
+      color: #64748b;
+      margin: 0 0 4px 0;
+      padding: 0;
+      line-height: 1;
+    }
+    .student-item.unanswered .timestamp { color: #cbd5e1; }
+    .message {
+      grid-row: 1 / -1;
+      grid-column: 1 / -1;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 20px;
+    }
+    .student-item.absent {
+      background: #1f2937;
+      border: 1px solid #4b5563;
+      opacity: 0.65;
+    }
+    .student-item.absent .student-name { color: #9ca3af; }
+    .duplicate-badge {
+      font-size: 0.55rem;
+      background-color: #b45309;
+      color: #fef08a;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-weight: bold;
+      border: 1px solid #d97706;
+      line-height: 1;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .student-item.has-duplicate {
+      background: #2e2305 !important;
+      border-color: #d97706 !important;
+    }
+    .student-item.has-duplicate .student-name { color: #fef08a !important; }
+    .student-item.has-duplicate .timestamp { color: #ffffff !important; opacity: 0.9; }
+
+    /* ツールチップ */
+    .student-item .detail-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: 260px;
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-size: 0.72rem;
+      border-radius: 6px;
+      padding: 8px 10px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+      position: absolute;
+      z-index: 9999;
+      top: 0;
+      left: 100%;
+      transform: translateX(6px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+    .student-item .detail-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 15px;
+      right: 100%;
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent #0f172a transparent transparent;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .student-item:hover .detail-tooltip {
+        visibility: visible;
+        opacity: 1;
+        transform: translateX(10px);
+      }
+    }
+    .student-item.show-tooltip .detail-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(10px);
+    }
+    .student-item.show-tooltip { z-index: 100 !important; }
+    .tooltip-row { display: flex; justify-content: space-between; margin-bottom: 3px; line-height: 1.3; }
+    .tooltip-label { color: #94a3b8; font-weight: bold; }
+    .tooltip-val { color: #e2e8f0; }
+
+    /* ========================================== */
+    /* セクション2: index.html 側（課題提出検索）  */
+    /* ========================================== */
+    .header-area { margin-bottom: 24px; text-align: center; }
+    h2 { margin: 0 0 8px 0; color: var(--text-main); font-size: 24px; font-weight: 800; }
+    p.subtitle { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+    
+    .search-box-sub {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      background: var(--bg-color);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+    .search-box-sub input[type="text"] {
+      flex: 1;
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+    }
+    .search-box-sub input[type="text"]::placeholder { color: var(--text-muted); }
+    button.search-btn {
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 700;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s ease;
+    }
+    button.search-btn:hover { background-color: var(--primary-hover); }
+
+    .filter-tabs { display: none !important; }
+
+    #loading-sub {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-muted);
+      margin: 30px 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+      border-radius: 12px;
+      background: var(--card-bg);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    th {
+      background-color: var(--bg-color);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
+    th.col-center, td.col-center { text-align: center !important; }
+
+    #mobile-card-container { display: none; flex-direction: column; gap: 16px; margin-top: 16px; }
+    .mobile-card {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mobile-card-student {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+    .mobile-card-upper { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .mobile-card-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .mobile-card-meta { font-size: 12px; color: var(--text-muted); text-align: right; }
+    .mobile-card-lower { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border-color); }
+    .mobile-card-lecture { font-size: 13px; font-weight: 700; color: var(--text-main); }
+
+    .badge { display: inline-block; padding: 4px 10px; font-size: 12px; font-weight: 800; border-radius: 20px; }
+    .status-submitted { background-color: #059669; color: #ffffff; }
+    .status-unsubmitted { background-color: #dc2626; color: #ffffff; }
+    .status-invalid { background-color: #d97706; color: #ffffff; }
+    .req-badge-required { padding: 4px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .req-badge-optional { padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+    .folder-link { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .folder-link:hover { text-decoration: underline; }
+    .empty-message { text-align: center; color: var(--text-muted); padding: 40px 16px; font-size: 15px; }
+
+    /* ダークモード切替ボタン */
+    .theme-toggle-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-color);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+    .theme-toggle-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+    footer.text-center { text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 11px; }
+
+    @media (max-width: 768px) {
+      .table-container { display: none !important; }
+      #mobile-card-container { display: flex !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- セクション1: あなたのフォーム回答状況       -->
+  <!-- ========================================== -->
+  <div class="app-section">
+    <div class="header-status">
+      <h1 id="main-title">
+        <span class="title-main">あなたのフォーム回答状況</span>
+      </h1>
+      
+      <div class="header-right">
+        <div class="date-info">
+          <span class="status-date-part">判定基準日: <span id="current-date"></span></span>
+          <span class="status-pipe"> | </span>
+          <span class="status-update-part">最終更新: <span id="last-update">-</span></span>
+        </div>
+        <div class="status-badge">
+          <span class="status-dot"></span> 自動更新中
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="count-badge">表示人数: <span id="student-count">0</span> 名</div>
+      <div class="controls-container">
+        <div class="search-container">
+          <input type="text" id="student-search" class="search-input" placeholder="🔍 あなたの名前を入力してください..." oninput="handleSearchInput()" autofocus>
+        </div>
+        <div class="usage-hint" id="usage-hint-text">※カードにマウスを合わせると詳細データが表示されます</div>
+      </div>
+    </div>
+
+    <ul class="student-grid" id="student-list">
+      <li class="message">名前を入力するとカードが表示されます。</li>
+    </ul>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- セクション2: 課題提出状況 検索システム     -->
+  <!-- ========================================== -->
+  <div class="app-section">
+    <button id="theme-toggle" class="theme-toggle-btn">
+      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <span id="theme-text">ダークモード</span>
+    </button>
+
+    <div class="header-area">
+      <h2>課題提出状況 検索システム</h2>
+      <p class="subtitle">あなたの氏名を入力して提出状況を確認します。</p>
+    </div>
+
+    <div class="search-box-sub">
+      <input type="text" id="keyword" placeholder="フルネームを入れてください">
+      <button id="search-btn" class="search-btn" onclick="performSearchSub()">検索する</button>
+    </div>
+
+    <div id="loading-sub">
+      <div class="spinner"></div>
+      <span>検索中...</span>
+    </div>
+
+    <!-- PC用テーブル -->
+    <div id="result-container" class="table-container">
+      <table id="result-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>学生氏名</th>
+            <th>課題タイトル</th>
+            <th>提出期限</th>
+            <th class="col-center">区分</th>
+            <th class="col-center">提出フォルダ</th>
+            <th class="col-center">提出状況</th>
+            <th>講義名</th>
+          </tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+      </table>
+    </div>
+
+    <!-- スマホ用カードリスト -->
+    <div id="mobile-card-container"></div>
+  </div>
+
+  <footer class="text-center">
+    <p>&copy; AfterEffects_OK All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    /* ========================================== */
+    /* 1. 回答状況チェッカーのロジック (personal.html側) */
+    /* ========================================== */
+    const GAS_WEB_APP_URL_1 = "https://script.google.com/macros/s/AKfycbx7qG7piMDI5I83ZTOb_udu67M4i-eGWa6PSaaVXH3ZRotYxHAmYj5_-5uQpS5-ymU/exec";
+    const BASE_REFRESH_INTERVAL = 35000;
+    const STORAGE_KEY_1 = "saved_student_search_query";
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    document.getElementById('current-date').textContent = `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+
+    let globalStudentsData = [];
+    let globalAttendeesData = [];
+    let previousHash = "";
+    let isRequesting = false;
+
+    function updateUsageHint() {
+      const hintEl = document.getElementById('usage-hint-text');
+      if (!hintEl) return;
+      const isTouchDevice = (window.matchMedia("(pointer: coarse)").matches) || (window.innerWidth <= 768);
+      hintEl.textContent = isTouchDevice ? "※カードをタップすると詳細データが表示されます" : "※カードにマウスを合わせると詳細データが表示されます";
+    }
+
+    function cleanStr(str) { return String(str || '').replace(/\s+/g, '').trim(); }
+
+    function handleSearchInput() {
+      const searchInputEl = document.getElementById('student-search');
+      if (searchInputEl) {
+        try { localStorage.setItem(STORAGE_KEY_1, searchInputEl.value); } catch (e) {}
+      }
+      renderStudentList();
+    }
+
+    function fetchTodayData() {
+      if (isRequesting) return;
+      isRequesting = true;
+      const oldScript = document.getElementById('jsonp-script');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'jsonp-script';
+      script.src = `${GAS_WEB_APP_URL_1}?callback=handleResponse&_=${new Date().getTime()}`;
+      script.onerror = () => {
+        isRequesting = false;
+        document.getElementById('last-update').textContent = "再接続中...";
+      };
+      document.body.appendChild(script);
+    }
+
+    function handleResponse(response) {
+      isRequesting = false;
+      document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+      if (response && response.error) {
+        document.getElementById('student-list').innerHTML = `<li class="message" style="color:#f87171;">${escapeHtml(response.error)}</li>`;
+        return;
+      }
+      if (response.hash && response.hash === previousHash) return;
+      previousHash = response.hash;
+      sendAutoRefreshLog();
+
+      window.globalOfficialAbsences = (response && response.officialAbsences) ? response.officialAbsences : [];
+      globalStudentsData = (response && response.students) ? response.students : [];
+      let rawAttendees = (response && response.attendees) ? response.attendees : [];
+      rawAttendees.sort((a, b) => (a.time ? new Date(a.time).getTime() : 0) - (b.time ? new Date(b.time).getTime() : 0));
+      globalAttendeesData = rawAttendees;
+      renderStudentList();
+    }
+
+    function extractSubjectId(lectureStr) {
+      if (!lectureStr || !lectureStr.includes('_')) return '';
+      const parts = lectureStr.split('_');
+      return parts[parts.length - 1].trim();
+    }
+
+    function renderStudentList() {
+      const listEl = document.getElementById('student-list');
+      const countEl = document.getElementById('student-count');
+      const searchInputEl = document.getElementById('student-search');
+      const searchQuery = searchInputEl ? cleanStr(searchInputEl.value).toLowerCase() : "";
+
+      if (searchQuery === "") {
+        countEl.textContent = "0";
+        listEl.innerHTML = '<li class="message">名前を入力するとカードが表示されます。</li>';
+        document.getElementById('main-title').innerHTML = `<span class="title-main">あなたのフォーム回答状況</span><span class="title-date">（${month}月${day}日分）</span>`;
+        return;
+      }
+
+      let targetAttendees = [...globalAttendeesData];
+      const officialAbsenceSet = new Set();
+      const absenceData = window.globalOfficialAbsences || [];
+
+      if (Array.isArray(absenceData)) {
+        absenceData.forEach(abs => {
+          if (abs.subjectId && abs.name) officialAbsenceSet.add(`${abs.subjectId}_${cleanStr(abs.name)}`);
+        });
+        absenceData.forEach(abs => {
+          if (!abs.name || !abs.subjectId) return;
+          if (!targetAttendees.some(att => cleanStr(att.name) === cleanStr(abs.name))) {
+            targetAttendees.push({ name: abs.name, lecture: `科目_${abs.subjectId}`, subjectId: abs.subjectId, report: "公欠", isOfficialAbsence: true });
+          }
+        });
+      }
+
+      const answeredMap = new Map();
+      const responseCountMap = new Map();
+      const activeLecturesWithResponses = new Set();
+      globalStudentsData.forEach(s => {
+        const lec = cleanStr(s.lecture);
+        const name = cleanStr(s.name);
+        if (lec && name) {
+          const key = `${lec}_${name}`;
+          responseCountMap.set(key, (responseCountMap.get(key) || 0) + 1);
+          answeredMap.set(key, s);
+          activeLecturesWithResponses.add(lec);
+        }
+      });
+
+      const uniqueAttendeesMap = new Map();
+      const attendanceCountMap = new Map();
+      const attendanceTimesMap = new Map();
+      targetAttendees.forEach(att => {
+        const key = `${cleanStr(att.lecture)}_${cleanStr(att.name)}`;
+        attendanceCountMap.set(key, (attendanceCountMap.get(key) || 0) + 1);
+        if (!attendanceTimesMap.has(key)) attendanceTimesMap.set(key, []);
+        if (att.time) attendanceTimesMap.get(key).push(escapeHtml(att.time));
+        if (!uniqueAttendeesMap.has(key)) uniqueAttendeesMap.set(key, att);
+      });
+
+      let uniqueAttendees = Array.from(uniqueAttendeesMap.values()).filter(att => cleanStr(att.name).toLowerCase() === searchQuery);
+      countEl.textContent = uniqueAttendees.length;
+      listEl.innerHTML = '';
+
+      if (uniqueAttendees.length > 0 && searchInputEl) {
+        let logNote = sessionStorage.getItem("has_visited_session") ? "個別の回答状況閲覧／リロード" : (sessionStorage.setItem("has_visited_session", "true"), "個別の回答状況閲覧／初回アクセス");
+        sendAccessLog(searchInputEl.value, uniqueAttendees[0].lecture || "-", logNote);
+      }
+
+      const mainTitleEl = document.getElementById('main-title');
+      const hasUnansweredBadge = uniqueAttendees.some(att => {
+        const key = `${cleanStr(att.lecture)}_${cleanStr(att.name)}`;
+        return !answeredMap.get(key) && !activeLecturesWithResponses.has(cleanStr(att.lecture));
+      });
+      const baseTitleText = uniqueAttendees.length === 0 ? "あなたのフォーム回答状況" : (hasUnansweredBadge ? "おさらいテスト 回答状況" : "出席確認 回答状況");
+      mainTitleEl.innerHTML = `<span class="title-main">${escapeHtml(baseTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
+
+      if (uniqueAttendees.length === 0) {
+        listEl.innerHTML = '<li class="message">該当する回答データが見つかりませんでした。入力内容を確認してください。</li>';
+        return;
+      }
+
+      uniqueAttendees.forEach(att => {
+        const studentName = cleanStr(att.name);
+        const studentLecture = cleanStr(att.lecture);
+        const currentKey = `${studentLecture}_${studentName}`;
+        const isOfficialAbsence = officialAbsenceSet.has(`${extractSubjectId(studentLecture)}_${studentName}`);
+        const answeredData = answeredMap.get(currentKey);
+        const isAbsent = String(att.report || "").includes("欠席");
+        const attendTimes = attendanceTimesMap.get(currentKey) || [];
+        const attendTimeStr = attendTimes.length === 1 ? attendTimes[0] : (attendTimes.length > 1 ? attendTimes.join('<br>') : '未登録');
+        const testTimeStr = answeredData && answeredData.time ? escapeHtml(answeredData.time) : '未送信';
+        const reportTimeStr = answeredData && answeredData.hasReport ? (answeredData.reportTimeStr ? escapeHtml(answeredData.reportTimeStr) : '提出済み') : '未提出';
+
+        let attendInfoRowsHtml = isOfficialAbsence ? `<div class="tooltip-row"><span class="tooltip-label">公欠処理:</span><span class="tooltip-val">公欠登録済み</span></div>` : `<div class="tooltip-row"><span class="tooltip-label">${isAbsent ? '欠席処理' : '出席登録'}:</span><span class="tooltip-val">${attendTimeStr}</span></div>`;
+        const tooltipHtml = `<div class="detail-tooltip"><div class="tooltip-title">${escapeHtml(att.name)}</div>${attendInfoRowsHtml}<div class="tooltip-row"><span class="tooltip-label">おさらいテスト:</span><span class="tooltip-val">${testTimeStr}</span></div><div class="tooltip-row"><span class="tooltip-label">作業報告:</span><span class="tooltip-val">${reportTimeStr}</span></div></div>`;
+
+        const li = document.createElement('li');
+        if (isOfficialAbsence) {
+          li.className = 'student-item official-absence';
+          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name" style="color: #4ade80;">${escapeHtml(att.name)}</span></div><span style="font-size:11px; padding:2px 6px; background:#14532d; color:#4ade80; font-weight:bold; border-radius:4px;">公欠</span></div><span class="timestamp">${att.time ? `${escapeHtml(att.time)} 出席` : '公欠処理済み'}</span>`;
+        } else if (isAbsent) {
+          li.className = 'student-item absent';
+          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><span class="absent-badge">欠席</span></div><span class="timestamp">欠席処理済み</span>`;
+        } else if (answeredData) {
+          li.className = 'student-item';
+          let badgesHtml = answeredData.hasReport ? `<span class="report-icon" title="報告提出済み">報告 ⭐</span>` : '';
+          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><div class="badge-group">${badgesHtml}</div></div><span class="timestamp">${escapeHtml(answeredData.time)}</span>`;
+        } else {
+          li.className = 'student-item unanswered';
+          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><span class="unanswered-badge">未回答</span></div><span class="timestamp">${att.time ? `${escapeHtml(att.time)} 出席` : '未回答'}</span>`;
+        }
+        listEl.appendChild(li);
+      });
+    }
+
+    function scheduleNextFetch() {
+      setTimeout(() => { fetchTodayData(); scheduleNextFetch(); }, BASE_REFRESH_INTERVAL + (Math.random() * 10000 - 5000));
+    }
+
+    function sendAccessLog(studentName, subjectName = "-", noteText = "個別の回答状況閲覧") {
+      fetch("https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ name: studentName, subject: subjectName, note: noteText })
+      }).catch(() => {});
+    }
+
+    function sendAutoRefreshLog() {
+      const searchInputEl = document.getElementById('student-search');
+      if (searchInputEl && searchInputEl.value.trim().length > 0) {
+        sendAccessLog(searchInputEl.value, globalAttendeesData[0]?.lecture || "-", "個別の回答状況閲覧／表示内容更新");
+      }
+    }
+
+
+    /* ========================================== */
+    /* 2. 課題提出状況検索のロジック (index.html側)   */
+    /* ========================================== */
+    const GAS_WEB_APP_URL_2 = 'https://script.google.com/macros/s/AKfycbx3nekLkhBtP8owIsAh_cnXWFqmVHAr7qepJXaTXnJirCm-hykjdOevsV238RN9iYtXyg/exec';
+    const STORAGE_KEY_2 = 'saved_search_keyword';
+    let allResults = [];
+
+    function performSearchSub() {
+      const rawKeyword = document.getElementById('keyword').value.trim();
+      if (!rawKeyword) { alert('検索キーワードを入力してください。'); return; }
+      localStorage.setItem(STORAGE_KEY_2, rawKeyword);
+      
+      const keyword = rawKeyword.replace(/[\s ]+/g, '').replace(/[\uFE00-\uFE0F]/g, '');
+      document.getElementById('loading-sub').style.display = 'flex';
+      document.getElementById('result-table').style.display = 'none';
+      document.getElementById('mobile-card-container').innerHTML = '';
+
+      fetch(GAS_WEB_APP_URL_2 + '?keyword=' + encodeURIComponent(keyword))
+        .then(res => res.json())
+        .then(results => {
+          document.getElementById('loading-sub').style.display = 'none';
+          allResults = results || [];
+          renderTableSub();
+        })
+        .catch(err => {
+          document.getElementById('loading-sub').style.display = 'none';
+          alert('エラーが発生しました: ' + err.message);
+        });
+    }
+
+    function renderTableSub() {
+      const table = document.getElementById('result-table');
+      const tbody = document.getElementById('result-body');
+      const cardContainer = document.getElementById('mobile-card-container');
+
+      if (allResults.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-message">該当するデータが見つかりませんでした。</td></tr>';
+        table.style.display = 'table';
+        cardContainer.innerHTML = '<div class="empty-message">該当するデータが見つかりませんでした。</div>';
+        return;
+      }
+
+      let tableHtml = '', cardHtml = '';
+      allResults.forEach(r => {
+        const isSub = (r.isSubmitted === true || r.isSubmitted === 'TRUE' || r.isSubmitted === 'true');
+        const statusHtml = isSub ? '<span class="badge status-submitted">提出済み</span>' : '<span class="badge status-unsubmitted">未提出</span>';
+        const folderHtml = (r.folderId && r.folderId !== '-') ? `<a href="https://drive.google.com/drive/folders/${r.folderId}" target="_blank" class="folder-link">フォルダを開く ↗</a>` : '-';
+        const reqHtml = `<span class="${String(r.requirement).includes('必') ? 'req-badge-required' : 'req-badge-optional'}">${escapeHtml(r.requirement)}</span>`;
+
+        tableHtml += `<tr>
+          <td style="font-weight: 700;">${escapeHtml(r.studentName)}</td>
+          <td>${escapeHtml(r.kadaiName)}</td>
+          <td>${escapeHtml(r.deadline)}</td>
+          <td class="col-center">${reqHtml}</td>
+          <td class="col-center">${folderHtml}</td>
+          <td class="col-center">${statusHtml}</td>
+          <td>${escapeHtml(r.submitDate)}</td>
+        </tr>`;
+
+        cardHtml += `<div class="mobile-card">
+          <div class="mobile-card-student">${escapeHtml(r.studentName)}</div>
+          <div class="mobile-card-upper">
+            <div class="mobile-card-title">${escapeHtml(r.kadaiName)}</div>
+            <div class="mobile-card-meta">期限：${escapeHtml(r.deadline)}<br>${reqHtml}</div>
+          </div>
+          <div class="mobile-card-lower">
+            <div class="mobile-card-lecture">${escapeHtml(r.submitDate)}</div>
+            <div>${statusHtml}</div>
+          </div>
+        </div>`;
+      });
+
+      tbody.innerHTML = tableHtml;
+      table.style.display = 'table';
+      cardContainer.innerHTML = cardHtml;
+    }
+
+
+    /* ========================================== */
+    /* 3. 共通初期化処理                           */
+    /* ========================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 保存された検索ワードの復元
+      const savedQ1 = localStorage.getItem(STORAGE_KEY_1);
+      if (savedQ1) { document.getElementById('student-search').value = savedQ1; }
+      
+      const savedQ2 = localStorage.getItem(STORAGE_KEY_2);
+      if (savedQ2) { 
+        document.getElementById('keyword').value = savedQ2; 
+        performSearchSub();
+      }
+
+      updateUsageHint();
+      fetchTodayData();
+      scheduleNextFetch();
+
+      // ダークモードの適用状態の管理
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const themeIcon = document.getElementById('theme-icon');
+      const themeText = document.getElementById('theme-text');
+      const moonPath = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
+      const sunPath = "M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z";
+      
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-mode');
+        themeIcon.innerHTML = `<path d="${sunPath}"/>`;
+        themeText.textContent = 'ライトモード';
+      }
+
+      themeToggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        themeIcon.innerHTML = isDark ? `<path d="${sunPath}"/>` : `<path d="${moonPath}"/>`;
+        themeText.textContent = isDark ? 'ライトモード' : 'ダークモード';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+  </script>
+</body>
+</html>
