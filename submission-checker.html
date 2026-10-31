@@ -855,16 +855,11 @@
         <div id="header-top-container" class="header-top-flex">
             <div id="header-area" class="header-content-wrapper">
                 <h2>課題別 提出状況ダッシュボード</h2>
-                <p class="subtitle">各課題のカードをタップすると、学生ごとの提出状況が展開されます。</p>
+                <p class="subtitle">課題をタップすると 学生ごとの提出状況が展開されます</p>
             </div>
             
             <div class="controls-bar">
                 <!-- モード切り替えボタンをコントロールバーの先頭（一番左側＝全体の中では最上部・右側エリアの先頭）に移動 -->
-                <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
-                    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
-                    <span id="theme-text">ダークモード</span>
-                </button>
-
                 <div class="delay-select-group">
                     <label for="delay-select">ディレイ:</label>
                     <select id="delay-select" onchange="onDelayChange()">
@@ -882,6 +877,12 @@
                 <button id="toggle-filter-btn" class="control-btn" onclick="toggleFilter()">
                     <span>検索・フィルターを非表示</span>
                 </button>
+
+                <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
+                    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
+                    <span id="theme-text">ダークモード</span>
+                </button>
+
             </div>
         </div>
 
