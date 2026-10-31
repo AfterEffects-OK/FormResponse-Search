@@ -1,942 +1,1538 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="page-title-tag">総合ダッシュボード</title>
-  <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/AfterEffects-OK/PortalSite/main/FormResponse-Search.png">
-  <style>
-    /* ========================================== */
-    /* 共通・テーマ設定 (CSS変数)                 */
-    /* ========================================== */
-    :root {
-      --primary: #059669;
-      --primary-hover: #047857;
-      --primary-light: #ecfdf5;
-      --bg-color: #0b0f19;
-      --card-bg: #111827;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #1f2937;
-      --radius: 16px;
-      --shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課題別 提出状況ダッシュボード</title>
+    <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/AfterEffects-OK/submission-checker/main/watermarked_img_17656930725140942704.jpg">
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-hover: #047857;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --btn-text: #334155;
+            --border-color: #e2e8f0;
+            --radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --filter-bg: #f8fafc;
+            --sub-bg: #ffffff;
+            --req-color: #0369a1;
+        }
 
-    body.dark-mode {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-      --primary-light: #064e3b;
-    }
+        /* ダークモード時のカラー定義 (body.dark-mode クラスに連動) */
+        body.dark-mode {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --btn-text: #cbd5e1;
+            --border-color: #334155;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            --filter-bg: #0f172a;
+            --sub-bg: #1e293b;
+            --req-color: #38bdf8;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", Meiryo, sans-serif;
-      background-color: var(--bg-color);
-      margin: 0;
-      padding: 12px;
-      color: var(--text-main);
-      box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px 24px 40px 24px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 10px 40px 40px 40px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        /* 最上部ヘッダーエリア：タイトルとコントロールバーを同一行に配置 */
+        .header-top-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        .header-top-flex.all-hidden {
+            margin-bottom: 8px;
+        }
+        
+        .header-content-wrapper {
+            transition: all 0.3s ease;
+            max-height: 200px;
+            overflow: hidden;
+            opacity: 1;
+        }
+        .header-content-wrapper.collapsed {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+            margin-bottom: 0;
+        }
 
-    .app-section {
-      max-width: 1250px;
-      width: 100%;
-      margin: 0 auto 30px auto;
-      background: var(--card-bg);
-      padding: 24px 16px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border-color);
-      box-sizing: border-box;
-      position: relative;
-    }
+        h2 { margin: 0 0 2px 0; font-size: 26px; font-weight: 800; }
+        p.subtitle { margin: 0; color: var(--text-muted); font-size: 13px; }
 
-    /* ========================================== */
-    /* セクション1: personal.html 側（回答状況）    */
-    /* ========================================== */
-    .header-status {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    h1 {
-      font-size: 1.1rem;
-      margin: 0;
-      color: #60a5fa;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0;
-    }
-    .title-main { white-space: nowrap; }
-    .title-date { white-space: nowrap; }
+        .controls-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            background: var(--filter-bg);
+            border: 1px solid var(--border-color);
+            color: var(--btn-text);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .control-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .date-info {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px;
-    }
-    .status-badge {
-      font-size: 0.75rem;
-      padding: 2px 6px;
-      border-radius: 12px;
-      background-color: #064e3b;
-      color: #4ade80;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      border: 1px solid #065f46;
-    }
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background-color: #22c55e;
-      border-radius: 50%;
-      display: inline-block;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
+        /* ディレイ切替用セレクトのコンポーネント */
+        .delay-select-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--filter-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--btn-text);
+        }
+        .delay-select-group select {
+            background: var(--card-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+        .delay-select-group select:focus {
+            border-color: var(--primary);
+        }
 
-    .filter-bar {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
-    }
-    .count-badge, .lecture-buttons-container { display: none !important; }
+        .theme-toggle-btn {
+            background: var(--filter-bg);
+            border: 1px solid var(--border-color);
+            color: var(--btn-text);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+        .theme-toggle-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .theme-toggle-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-    .controls-container {
-      display: flex;
-      align-items: center;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      justify-content: center;
-      margin-bottom: 4px;
-    }
-    .search-container {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      width: 100%;
-      max-width: 400px;
-    }
-    .search-input {
-      background-color: #1e293b;
-      color: #f8fafc;
-      border: 2px solid #3b82f6;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.2s ease;
-      width: 100%;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
-    }
-    .search-input:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
-    }
-    .search-input::placeholder { color: #94a3b8; }
-    .usage-hint {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: center;
-      margin: 0 0 4px 0;
-      letter-spacing: 0.02em;
-    }
+        .filter-section {
+          display: flex; 
+          gap: 24px; 
+          flex-wrap: wrap; 
+          margin-top: -8px;       
+          margin-bottom: 20px;    
+          background: var(--filter-bg); 
+          padding: 12px 16px;     
+          border-radius: 12px; 
+          border: 1px solid var(--border-color); 
+          transition: all 0.3s ease; 
+          max-height: 200px; 
+          overflow: hidden; 
+          opacity: 1; 
+        }
+        .filter-section.collapsed {
+            max-height: 0;
+            margin-bottom: 0;
+            padding: 0 20px;
+            border-width: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 280px;
+        }
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .filter-select {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+        .filter-select:focus {
+            border-color: var(--primary);
+        }
 
-    .student-grid {
-      display: grid;
-      grid-template-rows: repeat(5, auto);
-      grid-auto-flow: column;
-      gap: 12px 6px;
-      list-style: none;
-      padding: 20px 12px;
-      margin: 0;
-      overflow-x: auto;
-      align-content: start;
-    }
-    .student-item {
-      background: #ffffff;
-      padding: 4px 6px;
-      border: 1.5px solid #ffffff;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      box-sizing: border-box;
-      max-width: 200px;
-      width: 100%;
-      transition: border-color 0.3s ease;
-      position: relative !important;
-      overflow: visible !important;
-      z-index: 1;
-      cursor: pointer;
-    }
-    .student-item:hover {
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-      z-index: 100 !important;
-    }
-    .student-item.unanswered {
-      background: #1e293b;
-      border: 1px dashed #ef4444;
-    }
-    .student-item.unanswered .student-name { color: #fca5a5; }
-    .name-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 4px;
-      margin: 4px 0 2px 0;
-      padding: 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .name-wrapper {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-    }
-    .student-name {
-      font-weight: bold;
-      font-size: 1.15rem;
-      color: #0f172a;
-      white-space: nowrap;
-      display: inline-block;
-      transform-origin: left center;
-      line-height: 1.1;
-      margin: 0;
-      padding: 0;
-    }
-    .report-icon {
-      font-size: 0.55rem;
-      background-color: #2563eb;
-      color: #ffffff;
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-weight: bold;
-      flex-shrink: 0;
-      line-height: 1;
-      border: 1px solid #1d4ed8;
-      white-space: nowrap;
-    }
-    .unanswered-badge {
-      font-size: 0.55rem;
-      background-color: #7f1d1d;
-      color: #fca5a5;
-      padding: 1px 4px;
-      border-radius: 2px;
-      font-weight: bold;
-      border: 1px solid #991b1b;
-      line-height: 1;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .absent-badge {
-      font-size: 0.55rem;
-      background-color: #374151;
-      color: #f3f4f6;
-      padding: 1px 4px;
-      border-radius: 2px;
-      font-weight: bold;
-      border: 1px solid #4b5563;
-      line-height: 1;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .student-item.official-absence {
-      border: 1px dashed #38bdf8;
-      background: #0f172a;
-    }
-    .badge-group {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-    .timestamp {
-      font-size: 0.55rem;
-      color: #64748b;
-      margin: 0 0 4px 0;
-      padding: 0;
-      line-height: 1;
-    }
-    .student-item.unanswered .timestamp { color: #cbd5e1; }
-    .message {
-      grid-row: 1 / -1;
-      grid-column: 1 / -1;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 20px;
-    }
-    .student-item.absent {
-      background: #1f2937;
-      border: 1px solid #4b5563;
-      opacity: 0.65;
-    }
-    .student-item.absent .student-name { color: #9ca3af; }
-    .duplicate-badge {
-      font-size: 0.55rem;
-      background-color: #b45309;
-      color: #fef08a;
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-weight: bold;
-      border: 1px solid #d97706;
-      line-height: 1;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .student-item.has-duplicate {
-      background: #2e2305 !important;
-      border-color: #d97706 !important;
-    }
-    .student-item.has-duplicate .student-name { color: #fef08a !important; }
-    .student-item.has-duplicate .timestamp { color: #ffffff !important; opacity: 0.9; }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--card-bg);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        th, td {
+          padding: 16px 20px; 
+          border-bottom: 1px solid var(--border-color); 
+          font-size: 15px; 
+          transition: border-color 0.2s ease; 
+        }
+        th {
+          background-color: var(--filter-bg); 
+          color: var(--text-muted); 
+          font-weight: 700; 
+          font-size: 13px; 
+          white-space: nowrap; 
+          padding-top: 8px;    
+          padding-bottom: 8px; 
+        }
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        th.sortable:hover {
+            color: var(--primary);
+            background-color: rgba(5, 150, 105, 0.05);
+        }
+        tr:last-child > td { border-bottom: none; }
+        
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .clickable-row:hover td {
+            background-color: rgba(5, 150, 105, 0.08);
+        }
+        .clickable-row.expanded td {
+            background-color: rgba(5, 150, 105, 0.12);
+            border-bottom: none;
+        }
 
-    /* ツールチップ */
-    .student-item .detail-tooltip {
-      visibility: hidden;
-      opacity: 0;
-      width: 260px;
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-size: 0.72rem;
-      border-radius: 6px;
-      padding: 8px 10px;
-      border: 1px solid #334155;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
-      position: absolute;
-      z-index: 9999;
-      top: 0;
-      left: 100%;
-      transform: translateX(6px);
-      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-      pointer-events: none;
-      box-sizing: border-box;
-    }
-    .student-item .detail-tooltip::after {
-      content: "";
-      position: absolute;
-      top: 15px;
-      right: 100%;
-      border-width: 6px;
-      border-style: solid;
-      border-color: transparent #0f172a transparent transparent;
-    }
-    @media (hover: hover) and (pointer: fine) {
-      .student-item:hover .detail-tooltip {
-        visibility: visible;
-        opacity: 1;
-        transform: translateX(10px);
-      }
-    }
-    .student-item.show-tooltip .detail-tooltip {
-      visibility: visible;
-      opacity: 1;
-      transform: translateX(10px);
-    }
-    .student-item.show-tooltip { z-index: 100 !important; }
-    .tooltip-row { display: flex; justify-content: space-between; margin-bottom: 3px; line-height: 1.3; }
-    .tooltip-label { color: #94a3b8; font-weight: bold; }
-    .tooltip-val { color: #e2e8f0; }
+        .detail-row {
+            display: none;
+            background-color: var(--filter-bg);
+        }
+        .detail-row.active {
+            display: table-row;
+        }
+        .detail-cell {
+            padding: 0 20px 20px 20px !important;
+            background-color: var(--filter-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .detail-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        
+        .reload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--filter-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .reload-btn:hover {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        .reload-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .reload-btn.loading svg {
+            animation: spin 0.8s linear infinite;
+        }
 
-    /* ========================================== */
-    /* セクション2: index.html 側（課題提出検索）  */
-    /* ========================================== */
-    .header-area { margin-bottom: 24px; text-align: center; }
-    h2 { margin: 0 0 8px 0; color: var(--text-main); font-size: 24px; font-weight: 800; }
-    p.subtitle { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
-    
-    .search-box-sub {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      background: var(--bg-color);
-      padding: 6px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-    }
-    .search-box-sub input[type="text"] {
-      flex: 1;
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 15px;
-      border: none;
-      outline: none;
-      background: transparent;
-      color: var(--text-main);
-    }
-    .search-box-sub input[type="text"]::placeholder { color: var(--text-muted); }
-    button.search-btn {
-      padding: 10px 24px;
-      font-size: 14px;
-      font-weight: 700;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.2s ease;
-    }
-    button.search-btn:hover { background-color: var(--primary-hover); }
+        .folder-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(5, 150, 105, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .folder-link-btn:hover {
+            background: rgba(5, 150, 105, 0.2);
+            border-color: var(--primary);
+        }
 
-    .filter-tabs { display: none !important; }
+        .student-controls-bar {
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center; 
+          flex-wrap: wrap; 
+          gap: 0px; 
+          margin-bottom: 10px;    
+          padding-top: 0px;       
+          padding-bottom: 8px;    
+          border-bottom: 1px dashed var(--border-color); 
+        }
+        .student-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .student-header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .detail-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .student-sort-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .student-sort-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .student-sort-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .student-sort-select:focus {
+            border-color: var(--primary);
+        }
 
-    #loading-sub {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--text-muted);
-      margin: 30px 0;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid var(--border-color);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+        .student-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 200px));
+            gap: 12px;
+            position: relative;
+        }
 
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-      margin-top: 12px;
-      border-radius: 12px;
-      background: var(--card-bg);
-    }
-    table { width: 100%; border-collapse: collapse; }
-    th, td {
-      padding: 14px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 14px;
-      white-space: nowrap;
-    }
-    th {
-      background-color: var(--bg-color);
-      color: var(--text-muted);
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-    tr:hover td { background-color: rgba(255, 255, 255, 0.02); }
-    th.col-center, td.col-center { text-align: center !important; }
+        @keyframes dropDownCard {
+            0% {
+                opacity: 0;
+                transform: translateY(-25px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    #mobile-card-container { display: none; flex-direction: column; gap: 16px; margin-top: 16px; }
-    .mobile-card {
-      background: var(--bg-color);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .mobile-card-student {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--primary);
-      background: var(--primary-light);
-      padding: 4px 10px;
-      border-radius: 6px;
-      width: fit-content;
-    }
-    .mobile-card-upper { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    .mobile-card-title { font-size: 16px; font-weight: 800; color: var(--text-main); }
-    .mobile-card-meta { font-size: 12px; color: var(--text-muted); text-align: right; }
-    .mobile-card-lower { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border-color); }
-    .mobile-card-lecture { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .student-card {
+            position: relative; 
+            border-radius: 8px;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0; /* 初期状態は非表示 */
+        }
 
-    .badge { display: inline-block; padding: 4px 10px; font-size: 12px; font-weight: 800; border-radius: 20px; }
-    .status-submitted { background-color: #059669; color: #ffffff; }
-    .status-unsubmitted { background-color: #dc2626; color: #ffffff; }
-    .status-invalid { background-color: #d97706; color: #ffffff; }
-    .req-badge-required { padding: 4px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-    .req-badge-optional { padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-    .folder-link { color: var(--primary); text-decoration: none; font-weight: 600; }
-    .folder-link:hover { text-decoration: underline; }
-    .empty-message { text-align: center; color: var(--text-muted); padding: 40px 16px; font-size: 15px; }
+        /* アニメーション再生中クラス */
+        .student-card.anim-playing {
+            animation: dropDownCard 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
 
-    /* ダークモード切替ボタン */
-    .theme-toggle-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: var(--bg-color);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      padding: 6px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      z-index: 10;
-    }
-    .theme-toggle-btn svg { width: 14px; height: 14px; fill: currentColor; }
+        .student-card.has-multiple::before,
+        .student-card.has-multiple::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            right: 3px;
+            bottom: -4px;
+            height: 4px;
+            background: inherit;
+            border: inherit;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            opacity: 0.7;
+            z-index: 1;
+        }
+        .student-card.has-multiple::after {
+            left: 6px;
+            right: 6px;
+            bottom: -8px;
+            height: 4px;
+            opacity: 0.4;
+            z-index: 0;
+        }
+        .student-card.has-multiple {
+            margin-bottom: 8px;
+            z-index: 2;
+        }
+        
+        .file-count-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 800;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
 
-    footer.text-center { text-align: center; margin-top: 30px; color: var(--text-muted); font-size: 11px; }
+        .student-card .card-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background-color: #0f172a;
+            color: #f8fafc;
+            text-align: left;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: pre;
+            line-height: 1.5;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+        .student-card.tooltip-down .card-tooltip {
+            bottom: auto;
+            top: 125%;
+            transform: translateX(-50%) translateY(-4px);
+        }
+        .student-card.tooltip-down .card-tooltip::after {
+            top: auto;
+            bottom: 100%;
+            border-color: transparent transparent #0f172a transparent;
+        }
 
-    @media (max-width: 768px) {
-      .table-container { display: none !important; }
-      #mobile-card-container { display: flex !important; }
-    }
-  </style>
+        .student-card .card-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -4px;
+            border-width: 4px;
+            border-style: solid;
+            border-color: #0f172a transparent transparent transparent;
+        }
+        .student-card:hover .card-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .student-card.submitted {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .student-card.submitted:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .student-card.unsubmitted {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .student-card.unsubmitted:hover {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .student-card.unknown {
+            background: rgba(234, 179, 8, 0.08);
+            border: 1px solid rgba(234, 179, 8, 0.25);
+        }
+        .student-card.unknown:hover {
+            border-color: rgba(234, 179, 8, 0.5);
+        }
+
+        .student-info-wrapper {
+            overflow: hidden;
+            flex-grow: 1;
+            margin-right: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .student-card-ruby {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .student-card-name {
+            font-weight: 800;
+            font-size: 21px;
+            color: var(--text-main);
+            white-space: nowrap;
+            transform-origin: left center;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        .student-card-date {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+            margin-bottom: 0px;
+            font-weight: 500;
+            white-space: nowrap;
+            line-height: 1.1;
+        }
+
+        .badge-submitted {
+            background: #047857;
+            color: #ecfdf5;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .badge-unsubmitted {
+            background: #b91c1c;
+            color: #fef2f2;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .badge-unknown {
+            background: #ca8a04;
+            color: #fefce8;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .td-lecture {
+            font-weight: 600;
+            white-space: pre-wrap;
+            word-break: normal;
+            overflow-wrap: break-word;
+        }
+        .td-requirement {
+            white-space: nowrap;
+        }
+        .td-status {
+            text-align: center;
+            white-space: nowrap;
+            font-feature-settings: "tnum";
+        }
+        .submitted-num {
+            font-weight: 700;
+            color: var(--text-main);
+            font-size: 16px;
+        }
+        .total-num {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .progress-bar-container {
+            background: var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 10px;
+            width: 100px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        .progress-bar-fill {
+            background: var(--primary);
+            height: 100%;
+            width: 0%; 
+            border-right: 1px solid rgba(0, 0, 0, 0.15); 
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        #loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--text-muted);
+            margin: 40px 0;
+            font-weight: 600;
+        }
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .mobile-cards-view {
+            display: none;
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 12px 8px;
+            }
+            .container {
+                padding: 16px 12px;
+                border-radius: 10px;
+            }
+            h2 {
+                font-size: 18px;
+            }
+            p.subtitle {
+                font-size: 12px;
+            }
+            .controls-bar {
+                display: none;
+            }
+            .filter-section {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px;
+                max-height: none !important;
+                opacity: 1 !important;
+            }
+            .filter-group {
+                min-width: 100%;
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+            }
+            .filter-group label {
+                min-width: 75px;
+            }
+            .filter-select {
+                width: 100%;
+            }
+
+            .table-container {
+                display: none;
+            }
+            .mobile-cards-view {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                margin-top: 16px;
+            }
+
+            .mobile-task-card {
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            }
+            .mobile-task-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 10px;
+                gap: 8px;
+            }
+            .mobile-task-title {
+                font-size: 16px;
+                font-weight: 800;
+                color: var(--text-main);
+                margin: 0;
+            }
+            .mobile-task-lecture {
+                font-size: 12px;
+                color: var(--text-muted);
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+            .mobile-task-info {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 13px;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .mobile-progress-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 14px;
+                background: var(--filter-bg);
+                padding: 10px 12px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+            }
+            .mobile-progress-text {
+                font-size: 13px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+            .mobile-progress-bar-container {
+                background: var(--border-color);
+                border-radius: 6px;
+                overflow: hidden;
+                height: 10px;
+                flex-grow: 1;
+                max-width: 160px;
+            }
+
+            .mobile-toggle-btn {
+                width: 100%;
+                background: var(--filter-bg);
+                border: 1px solid var(--border-color);
+                color: var(--text-main);
+                padding: 10px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+            }
+            .mobile-students-container {
+                display: none;
+                margin-top: 14px;
+                padding-top: 12px;
+                border-top: 1px dashed var(--border-color);
+            }
+            .mobile-students-container.active {
+                display: block;
+            }
+
+            .student-cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 6px;
+            }
+            .student-card {
+                padding: 6px 10px;
+            }
+            .student-card-name {
+                font-size: 18px;
+            }
+            .student-card-ruby {
+                font-size: 11px;
+            }
+            .student-card-date {
+                font-size: 9px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- ========================================== -->
-  <!-- セクション1: あなたのフォーム回答状況       -->
-  <!-- ========================================== -->
-  <div class="app-section">
-    <div class="header-status">
-      <h1 id="main-title">
-        <span class="title-main">あなたのフォーム回答状況</span>
-      </h1>
-      
-      <div class="header-right">
-        <div class="date-info">
-          <span class="status-date-part">判定基準日: <span id="current-date"></span></span>
-          <span class="status-pipe"> | </span>
-          <span class="status-update-part">最終更新: <span id="last-update">-</span></span>
+    <div class="container">
+        <div id="header-top-container" class="header-top-flex">
+            <div id="header-area" class="header-content-wrapper">
+                <h2>課題別 提出状況ダッシュボード</h2>
+                <p class="subtitle">各課題のカードをタップすると、学生ごとの提出状況が展開されます。</p>
+            </div>
+            
+            <div class="controls-bar">
+                <!-- モード切り替えボタンをコントロールバーの先頭（一番左側＝全体の中では最上部・右側エリアの先頭）に移動 -->
+                <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
+                    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
+                    <span id="theme-text">ダークモード</span>
+                </button>
+
+                <div class="delay-select-group">
+                    <label for="delay-select">ディレイ:</label>
+                    <select id="delay-select" onchange="onDelayChange()">
+                        <option value="0.01">高速 (0.01秒)</option>
+                        <option value="0.03">標準 (0.03秒)</option>
+                        <option value="0.1">ややゆっくり (0.1秒)</option>
+                        <option value="0.3" selected>ゆっくり (0.3秒)</option>
+                        <option value="0.7">超ゆっくり (0.7秒)</option>
+                    </select>
+                </div>
+
+                <button id="toggle-header-btn" class="control-btn" onclick="toggleHeader()">
+                    <span>タイトルを非表示</span>
+                </button>
+                <button id="toggle-filter-btn" class="control-btn" onclick="toggleFilter()">
+                    <span>検索・フィルターを非表示</span>
+                </button>
+            </div>
         </div>
-        <div class="status-badge">
-          <span class="status-dot"></span> 自動更新中
+
+        <div id="filter-area" class="filter-section">
+            <div class="filter-group">
+                <label for="lecture-select">講義名</label>
+                <select id="lecture-select" class="filter-select" onchange="onLectureChange()">
+                    <option value="すべて">すべて</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="kadai-select">課題タイトル</label>
+                <select id="kadai-select" class="filter-select" onchange="applyFilters()">
+                    <option value="すべて">すべて</option>
+                </select>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <div class="filter-bar">
-      <div class="count-badge">表示人数: <span id="student-count">0</span> 名</div>
-      <div class="controls-container">
-        <div class="search-container">
-          <input type="text" id="student-search" class="search-input" placeholder="🔍 あなたの名前を入力してください..." oninput="handleSearchInput()" autofocus>
+        <div id="loading">
+            <div class="spinner"></div>
+            <span>全データを読み込み中...</span>
         </div>
-        <div class="usage-hint" id="usage-hint-text">※カードにマウスを合わせると詳細データが表示されます</div>
-      </div>
+
+        <div class="table-container">
+            <table id="dashboard-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th class="sortable" onclick="sortTable('lecture')">科目名 <span id="sort-icon-lecture"></span></th>
+                        <th>課題タイトル</th>
+                        <th class="sortable" onclick="sortTable('deadline')">提出期限 <span id="sort-icon-deadline"></span></th>
+                        <th class="sortable" onclick="sortTable('requirement')">区分 <span id="sort-icon-requirement">▲</span></th>
+                        <th class="sortable" style="text-align: center;" onclick="sortTable('status')">提出状況 (提出数 / 対象者数) <span id="sort-icon-status"></span></th>
+                        <th class="sortable" style="text-align: center;" onclick="sortTable('rate')">提出率 <span id="sort-icon-rate"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="dashboard-body">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="mobile-cards-container" class="mobile-cards-view"></div>
     </div>
 
-    <ul class="student-grid" id="student-list">
-      <li class="message">名前を入力するとカードが表示されます。</li>
-    </ul>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- セクション2: 課題提出状況 検索システム     -->
-  <!-- ========================================== -->
-  <div class="app-section">
-    <button id="theme-toggle" class="theme-toggle-btn">
-      <svg id="theme-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-      <span id="theme-text">ダークモード</span>
-    </button>
-
-    <div class="header-area">
-      <h2>課題提出状況 検索システム</h2>
-      <p class="subtitle">あなたの氏名を入力して提出状況を確認します。</p>
-    </div>
-
-    <div class="search-box-sub">
-      <input type="text" id="keyword" placeholder="フルネームを入れてください">
-      <button id="search-btn" class="search-btn" onclick="performSearchSub()">検索する</button>
-    </div>
-
-    <div id="loading-sub">
-      <div class="spinner"></div>
-      <span>検索中...</span>
-    </div>
-
-    <!-- PC用テーブル -->
-    <div id="result-container" class="table-container">
-      <table id="result-table" style="display: none;">
-        <thead>
-          <tr>
-            <th>学生氏名</th>
-            <th>課題タイトル</th>
-            <th>提出期限</th>
-            <th class="col-center">区分</th>
-            <th class="col-center">提出フォルダ</th>
-            <th class="col-center">提出状況</th>
-            <th>講義名</th>
-          </tr>
-        </thead>
-        <tbody id="result-body"></tbody>
-      </table>
-    </div>
-
-    <!-- スマホ用カードリスト -->
-    <div id="mobile-card-container"></div>
-  </div>
-
-  <footer class="text-center">
-    <p>&copy; AfterEffects_OK All Rights Reserved.</p>
-  </footer>
-
-  <script>
-    /* ========================================== */
-    /* 1. 回答状況チェッカーのロジック (personal.html側) */
-    /* ========================================== */
-    const GAS_WEB_APP_URL_1 = "https://script.google.com/macros/s/AKfycbx7qG7piMDI5I83ZTOb_udu67M4i-eGWa6PSaaVXH3ZRotYxHAmYj5_-5uQpS5-ymU/exec";
-    const BASE_REFRESH_INTERVAL = 35000;
-    const STORAGE_KEY_1 = "saved_student_search_query";
-
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    document.getElementById('current-date').textContent = `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-
-    let globalStudentsData = [];
-    let globalAttendeesData = [];
-    let previousHash = "";
-    let isRequesting = false;
-
-    function updateUsageHint() {
-      const hintEl = document.getElementById('usage-hint-text');
-      if (!hintEl) return;
-      const isTouchDevice = (window.matchMedia("(pointer: coarse)").matches) || (window.innerWidth <= 768);
-      hintEl.textContent = isTouchDevice ? "※カードをタップすると詳細データが表示されます" : "※カードにマウスを合わせると詳細データが表示されます";
-    }
-
-    function cleanStr(str) { return String(str || '').replace(/\s+/g, '').trim(); }
-
-    function handleSearchInput() {
-      const searchInputEl = document.getElementById('student-search');
-      if (searchInputEl) {
-        try { localStorage.setItem(STORAGE_KEY_1, searchInputEl.value); } catch (e) {}
-      }
-      renderStudentList();
-    }
-
-    function fetchTodayData() {
-      if (isRequesting) return;
-      isRequesting = true;
-      const oldScript = document.getElementById('jsonp-script');
-      if (oldScript) oldScript.remove();
-
-      const script = document.createElement('script');
-      script.id = 'jsonp-script';
-      script.src = `${GAS_WEB_APP_URL_1}?callback=handleResponse&_=${new Date().getTime()}`;
-      script.onerror = () => {
-        isRequesting = false;
-        document.getElementById('last-update').textContent = "再接続中...";
-      };
-      document.body.appendChild(script);
-    }
-
-    function handleResponse(response) {
-      isRequesting = false;
-      document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-      if (response && response.error) {
-        document.getElementById('student-list').innerHTML = `<li class="message" style="color:#f87171;">${escapeHtml(response.error)}</li>`;
-        return;
-      }
-      if (response.hash && response.hash === previousHash) return;
-      previousHash = response.hash;
-      sendAutoRefreshLog();
-
-      window.globalOfficialAbsences = (response && response.officialAbsences) ? response.officialAbsences : [];
-      globalStudentsData = (response && response.students) ? response.students : [];
-      let rawAttendees = (response && response.attendees) ? response.attendees : [];
-      rawAttendees.sort((a, b) => (a.time ? new Date(a.time).getTime() : 0) - (b.time ? new Date(b.time).getTime() : 0));
-      globalAttendeesData = rawAttendees;
-      renderStudentList();
-    }
-
-    function extractSubjectId(lectureStr) {
-      if (!lectureStr || !lectureStr.includes('_')) return '';
-      const parts = lectureStr.split('_');
-      return parts[parts.length - 1].trim();
-    }
-
-    function renderStudentList() {
-      const listEl = document.getElementById('student-list');
-      const countEl = document.getElementById('student-count');
-      const searchInputEl = document.getElementById('student-search');
-      const searchQuery = searchInputEl ? cleanStr(searchInputEl.value).toLowerCase() : "";
-
-      if (searchQuery === "") {
-        countEl.textContent = "0";
-        listEl.innerHTML = '<li class="message">名前を入力するとカードが表示されます。</li>';
-        document.getElementById('main-title').innerHTML = `<span class="title-main">あなたのフォーム回答状況</span><span class="title-date">（${month}月${day}日分）</span>`;
-        return;
-      }
-
-      let targetAttendees = [...globalAttendeesData];
-      const officialAbsenceSet = new Set();
-      const absenceData = window.globalOfficialAbsences || [];
-
-      if (Array.isArray(absenceData)) {
-        absenceData.forEach(abs => {
-          if (abs.subjectId && abs.name) officialAbsenceSet.add(`${abs.subjectId}_${cleanStr(abs.name)}`);
-        });
-        absenceData.forEach(abs => {
-          if (!abs.name || !abs.subjectId) return;
-          if (!targetAttendees.some(att => cleanStr(att.name) === cleanStr(abs.name))) {
-            targetAttendees.push({ name: abs.name, lecture: `科目_${abs.subjectId}`, subjectId: abs.subjectId, report: "公欠", isOfficialAbsence: true });
-          }
-        });
-      }
-
-      const answeredMap = new Map();
-      const responseCountMap = new Map();
-      const activeLecturesWithResponses = new Set();
-      globalStudentsData.forEach(s => {
-        const lec = cleanStr(s.lecture);
-        const name = cleanStr(s.name);
-        if (lec && name) {
-          const key = `${lec}_${name}`;
-          responseCountMap.set(key, (responseCountMap.get(key) || 0) + 1);
-          answeredMap.set(key, s);
-          activeLecturesWithResponses.add(lec);
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+        const moonPath = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
+        const sunPath = "M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z";
+        
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        function applyTheme(isDark) {
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                themeIcon.innerHTML = `<path d="${sunPath}"/>`;
+                themeText.textContent = 'ライトモード';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.innerHTML = `<path d="${moonPath}"/>`;
+                themeText.textContent = 'ダークモード';
+            }
         }
-      });
-
-      const uniqueAttendeesMap = new Map();
-      const attendanceCountMap = new Map();
-      const attendanceTimesMap = new Map();
-      targetAttendees.forEach(att => {
-        const key = `${cleanStr(att.lecture)}_${cleanStr(att.name)}`;
-        attendanceCountMap.set(key, (attendanceCountMap.get(key) || 0) + 1);
-        if (!attendanceTimesMap.has(key)) attendanceTimesMap.set(key, []);
-        if (att.time) attendanceTimesMap.get(key).push(escapeHtml(att.time));
-        if (!uniqueAttendeesMap.has(key)) uniqueAttendeesMap.set(key, att);
-      });
-
-      let uniqueAttendees = Array.from(uniqueAttendeesMap.values()).filter(att => cleanStr(att.name).toLowerCase() === searchQuery);
-      countEl.textContent = uniqueAttendees.length;
-      listEl.innerHTML = '';
-
-      if (uniqueAttendees.length > 0 && searchInputEl) {
-        let logNote = sessionStorage.getItem("has_visited_session") ? "個別の回答状況閲覧／リロード" : (sessionStorage.setItem("has_visited_session", "true"), "個別の回答状況閲覧／初回アクセス");
-        sendAccessLog(searchInputEl.value, uniqueAttendees[0].lecture || "-", logNote);
-      }
-
-      const mainTitleEl = document.getElementById('main-title');
-      const hasUnansweredBadge = uniqueAttendees.some(att => {
-        const key = `${cleanStr(att.lecture)}_${cleanStr(att.name)}`;
-        return !answeredMap.get(key) && !activeLecturesWithResponses.has(cleanStr(att.lecture));
-      });
-      const baseTitleText = uniqueAttendees.length === 0 ? "あなたのフォーム回答状況" : (hasUnansweredBadge ? "おさらいテスト 回答状況" : "出席確認 回答状況");
-      mainTitleEl.innerHTML = `<span class="title-main">${escapeHtml(baseTitleText)}</span><span class="title-date">（${month}月${day}日分）</span>`;
-
-      if (uniqueAttendees.length === 0) {
-        listEl.innerHTML = '<li class="message">該当する回答データが見つかりませんでした。入力内容を確認してください。</li>';
-        return;
-      }
-
-      uniqueAttendees.forEach(att => {
-        const studentName = cleanStr(att.name);
-        const studentLecture = cleanStr(att.lecture);
-        const currentKey = `${studentLecture}_${studentName}`;
-        const isOfficialAbsence = officialAbsenceSet.has(`${extractSubjectId(studentLecture)}_${studentName}`);
-        const answeredData = answeredMap.get(currentKey);
-        const isAbsent = String(att.report || "").includes("欠席");
-        const attendTimes = attendanceTimesMap.get(currentKey) || [];
-        const attendTimeStr = attendTimes.length === 1 ? attendTimes[0] : (attendTimes.length > 1 ? attendTimes.join('<br>') : '未登録');
-        const testTimeStr = answeredData && answeredData.time ? escapeHtml(answeredData.time) : '未送信';
-        const reportTimeStr = answeredData && answeredData.hasReport ? (answeredData.reportTimeStr ? escapeHtml(answeredData.reportTimeStr) : '提出済み') : '未提出';
-
-        let attendInfoRowsHtml = isOfficialAbsence ? `<div class="tooltip-row"><span class="tooltip-label">公欠処理:</span><span class="tooltip-val">公欠登録済み</span></div>` : `<div class="tooltip-row"><span class="tooltip-label">${isAbsent ? '欠席処理' : '出席登録'}:</span><span class="tooltip-val">${attendTimeStr}</span></div>`;
-        const tooltipHtml = `<div class="detail-tooltip"><div class="tooltip-title">${escapeHtml(att.name)}</div>${attendInfoRowsHtml}<div class="tooltip-row"><span class="tooltip-label">おさらいテスト:</span><span class="tooltip-val">${testTimeStr}</span></div><div class="tooltip-row"><span class="tooltip-label">作業報告:</span><span class="tooltip-val">${reportTimeStr}</span></div></div>`;
-
-        const li = document.createElement('li');
-        if (isOfficialAbsence) {
-          li.className = 'student-item official-absence';
-          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name" style="color: #4ade80;">${escapeHtml(att.name)}</span></div><span style="font-size:11px; padding:2px 6px; background:#14532d; color:#4ade80; font-weight:bold; border-radius:4px;">公欠</span></div><span class="timestamp">${att.time ? `${escapeHtml(att.time)} 出席` : '公欠処理済み'}</span>`;
-        } else if (isAbsent) {
-          li.className = 'student-item absent';
-          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><span class="absent-badge">欠席</span></div><span class="timestamp">欠席処理済み</span>`;
-        } else if (answeredData) {
-          li.className = 'student-item';
-          let badgesHtml = answeredData.hasReport ? `<span class="report-icon" title="報告提出済み">報告 ⭐</span>` : '';
-          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><div class="badge-group">${badgesHtml}</div></div><span class="timestamp">${escapeHtml(answeredData.time)}</span>`;
-        } else {
-          li.className = 'student-item unanswered';
-          li.innerHTML = `${tooltipHtml}<div class="name-box"><div class="name-wrapper"><span class="student-name">${escapeHtml(att.name)}</span></div><span class="unanswered-badge">未回答</span></div><span class="timestamp">${att.time ? `${escapeHtml(att.time)} 出席` : '未回答'}</span>`;
-        }
-        listEl.appendChild(li);
-      });
-    }
-
-    function scheduleNextFetch() {
-      setTimeout(() => { fetchTodayData(); scheduleNextFetch(); }, BASE_REFRESH_INTERVAL + (Math.random() * 10000 - 5000));
-    }
-
-    function sendAccessLog(studentName, subjectName = "-", noteText = "個別の回答状況閲覧") {
-      fetch("https://script.google.com/macros/s/AKfycbyuqKGHH6lq7_PpMsfYKxCK1OTPZstBI0THqZ_bvS1OTGMseEqu17EgS3vXZFnXN-kC/exec", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ name: studentName, subject: subjectName, note: noteText })
-      }).catch(() => {});
-    }
-
-    function sendAutoRefreshLog() {
-      const searchInputEl = document.getElementById('student-search');
-      if (searchInputEl && searchInputEl.value.trim().length > 0) {
-        sendAccessLog(searchInputEl.value, globalAttendeesData[0]?.lecture || "-", "個別の回答状況閲覧／表示内容更新");
-      }
-    }
-
-
-    /* ========================================== */
-    /* 2. 課題提出状況検索のロジック (index.html側)   */
-    /* ========================================== */
-    const GAS_WEB_APP_URL_2 = 'https://script.google.com/macros/s/AKfycbx3nekLkhBtP8owIsAh_cnXWFqmVHAr7qepJXaTXnJirCm-hykjdOevsV238RN9iYtXyg/exec';
-    const STORAGE_KEY_2 = 'saved_search_keyword';
-    let allResults = [];
-
-    function performSearchSub() {
-      const rawKeyword = document.getElementById('keyword').value.trim();
-      if (!rawKeyword) { alert('検索キーワードを入力してください。'); return; }
-      localStorage.setItem(STORAGE_KEY_2, rawKeyword);
-      
-      const keyword = rawKeyword.replace(/[\s ]+/g, '').replace(/[\uFE00-\uFE0F]/g, '');
-      document.getElementById('loading-sub').style.display = 'flex';
-      document.getElementById('result-table').style.display = 'none';
-      document.getElementById('mobile-card-container').innerHTML = '';
-
-      fetch(GAS_WEB_APP_URL_2 + '?keyword=' + encodeURIComponent(keyword))
-        .then(res => res.json())
-        .then(results => {
-          document.getElementById('loading-sub').style.display = 'none';
-          allResults = results || [];
-          renderTableSub();
-        })
-        .catch(err => {
-          document.getElementById('loading-sub').style.display = 'none';
-          alert('エラーが発生しました: ' + err.message);
+        
+        const isInitialDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark.matches;
+        applyTheme(isInitialDark);
+        
+        themeToggleBtn.addEventListener('click', function() {
+            const isDarkMode = !document.body.classList.contains('dark-mode');
+            applyTheme(isDarkMode);
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
         });
-    }
+        
+        systemPrefersDark.addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                applyTheme(e.matches);
+            }
+        });
 
-    function renderTableSub() {
-      const table = document.getElementById('result-table');
-      const tbody = document.getElementById('result-body');
-      const cardContainer = document.getElementById('mobile-card-container');
+        function checkAllHiddenState() {
+            const headerArea = document.getElementById('header-area');
+            const filterArea = document.getElementById('filter-area');
+            const topFlex = document.getElementById('header-top-container');
 
-      if (allResults.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-message">該当するデータが見つかりませんでした。</td></tr>';
-        table.style.display = 'table';
-        cardContainer.innerHTML = '<div class="empty-message">該当するデータが見つかりませんでした。</div>';
-        return;
-      }
+            const isHeaderCollapsed = headerArea.classList.contains('collapsed');
+            const isFilterCollapsed = filterArea.classList.contains('collapsed');
 
-      let tableHtml = '', cardHtml = '';
-      allResults.forEach(r => {
-        const isSub = (r.isSubmitted === true || r.isSubmitted === 'TRUE' || r.isSubmitted === 'true');
-        const statusHtml = isSub ? '<span class="badge status-submitted">提出済み</span>' : '<span class="badge status-unsubmitted">未提出</span>';
-        const folderHtml = (r.folderId && r.folderId !== '-') ? `<a href="https://drive.google.com/drive/folders/${r.folderId}" target="_blank" class="folder-link">フォルダを開く ↗</a>` : '-';
-        const reqHtml = `<span class="${String(r.requirement).includes('必') ? 'req-badge-required' : 'req-badge-optional'}">${escapeHtml(r.requirement)}</span>`;
+            if (isHeaderCollapsed && isFilterCollapsed) {
+                topFlex.classList.add('all-hidden');
+            } else {
+                topFlex.classList.remove('all-hidden');
+            }
+        }
 
-        tableHtml += `<tr>
-          <td style="font-weight: 700;">${escapeHtml(r.studentName)}</td>
-          <td>${escapeHtml(r.kadaiName)}</td>
-          <td>${escapeHtml(r.deadline)}</td>
-          <td class="col-center">${reqHtml}</td>
-          <td class="col-center">${folderHtml}</td>
-          <td class="col-center">${statusHtml}</td>
-          <td>${escapeHtml(r.submitDate)}</td>
-        </tr>`;
+        function toggleHeader() {
+            const headerArea = document.getElementById('header-area');
+            const btn = document.getElementById('toggle-header-btn');
+            headerArea.classList.toggle('collapsed');
+            if (headerArea.classList.contains('collapsed')) {
+                btn.querySelector('span').textContent = 'タイトルを表示';
+            } else {
+                btn.querySelector('span').textContent = 'タイトルを非表示';
+            }
+            checkAllHiddenState();
+        }
 
-        cardHtml += `<div class="mobile-card">
-          <div class="mobile-card-student">${escapeHtml(r.studentName)}</div>
-          <div class="mobile-card-upper">
-            <div class="mobile-card-title">${escapeHtml(r.kadaiName)}</div>
-            <div class="mobile-card-meta">期限：${escapeHtml(r.deadline)}<br>${reqHtml}</div>
-          </div>
-          <div class="mobile-card-lower">
-            <div class="mobile-card-lecture">${escapeHtml(r.submitDate)}</div>
-            <div>${statusHtml}</div>
-          </div>
-        </div>`;
-      });
+        function toggleFilter() {
+            const filterArea = document.getElementById('filter-area');
+            const btn = document.getElementById('toggle-filter-btn');
+            filterArea.classList.toggle('collapsed');
+            if (filterArea.classList.contains('collapsed')) {
+                btn.querySelector('span').textContent = '検索・フィルターを表示';
+            } else {
+                btn.querySelector('span').textContent = '検索・フィルターを非表示';
+            }
+            checkAllHiddenState();
+        }
 
-      tbody.innerHTML = tableHtml;
-      table.style.display = 'table';
-      cardContainer.innerHTML = cardHtml;
-    }
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx3nekLkhBtP8owIsAh_cnXWFqmVHAr7qepJXaTXnJirCm-hykjdOevsV238RN9iYtXyg/exec';
 
+        let allTasksData = [];
+        let currentSortColumn = 'requirement';
+        let currentSortDirection = 'asc';
+        let expandedRowKeys = new Set();
+        let studentSortPreferences = {};
 
-    /* ========================================== */
-    /* 3. 共通初期化処理                           */
-    /* ========================================== */
-    window.addEventListener('DOMContentLoaded', () => {
-      // 保存された検索ワードの復元
-      const savedQ1 = localStorage.getItem(STORAGE_KEY_1);
-      if (savedQ1) { document.getElementById('student-search').value = savedQ1; }
-      
-      const savedQ2 = localStorage.getItem(STORAGE_KEY_2);
-      if (savedQ2) { 
-        document.getElementById('keyword').value = savedQ2; 
-        performSearchSub();
-      }
+        window.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+        });
 
-      updateUsageHint();
-      fetchTodayData();
-      scheduleNextFetch();
+        function loadAllData() {
+            fetch(GAS_URL + '?mode=dashboard')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    processData(data);
+                })
+                .catch(error => {
+                    document.getElementById('loading').innerHTML = 'データ取得エラーが発生しました: ' + error.message;
+                });
+        }
 
-      // ダークモードの適用状態の管理
-      const themeToggleBtn = document.getElementById('theme-toggle');
-      const themeIcon = document.getElementById('theme-icon');
-      const themeText = document.getElementById('theme-text');
-      const moonPath = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
-      const sunPath = "M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z";
-      
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.body.classList.add('dark-mode');
-        themeIcon.innerHTML = `<path d="${sunPath}"/>`;
-        themeText.textContent = 'ライトモード';
-      }
+        function parseTaskData(results) {
+            const taskMap = {};
+            results.forEach(r => {
+                const lectureVal = r.submitDate || 'その他';
+                const kadaiVal = r.kadaiName || 'その他';
+                const key = lectureVal + '_' + kadaiVal;
 
-      themeToggleBtn.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        themeIcon.innerHTML = isDark ? `<path d="${sunPath}"/>` : `<path d="${moonPath}"/>`;
-        themeText.textContent = isDark ? 'ライトモード' : 'ダークモード';
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      });
-    });
+                if (!taskMap[key]) {
+                    taskMap[key] = {
+                        lecture: lectureVal,
+                        kadaiName: kadaiVal,
+                        deadline: r.deadline || '-',
+                        requirement: r.requirement || '-',
+                        folderId: r.folderId || '',
+                        totalCount: 0,
+                        submittedCount: 0,
+                        studentsMap: {}
+                    };
+                }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
-    }
-  </script>
+                const studentName = r.studentName;
+                if (!taskMap[key].studentsMap[studentName]) {
+                    taskMap[key].studentsMap[studentName] = {
+                        name: studentName,
+                        ruby: r.studentRuby || '',
+                        status: r.isSubmitted,
+                        isSubmitted: false,
+                        submitDateStr: r.submitDateStr || '-',
+                        fileNames: []
+                    };
+                }
+
+                const stObj = taskMap[key].studentsMap[studentName];
+                let isOriginalSubmitted = (r.isSubmitted === true || r.isSubmitted === 'TRUE' || r.isSubmitted === 'true' || r.isSubmitted === '1');
+                if (isOriginalSubmitted) {
+                    stObj.isSubmitted = true;
+                }
+                if (r.status === '評価不能' || r.status === '判定不能') {
+                    stObj.status = r.status;
+                }
+                if (r.submitDateStr && r.submitDateStr !== '-') {
+                    stObj.submitDateStr = r.submitDateStr;
+                }
+                if (r.studentRuby) {
+                    stObj.ruby = r.studentRuby;
+                }
+
+                if (r.fileName && r.fileName !== '-') {
+                    const files = String(r.fileName).split(/[,、\n]/).map(f => f.trim()).filter(f => f.length > 0 && f !== '-');
+                    files.forEach(f => {
+                        if (!stObj.fileNames.includes(f)) {
+                            stObj.fileNames.push(f);
+                        }
+                    });
+                }
+            });
+
+            Object.values(taskMap).forEach(task => {
+                task.students = Object.values(task.studentsMap);
+                task.totalCount = task.students.length;
+                task.submittedCount = task.students.filter(st => st.isSubmitted).length;
+            });
+
+            return Object.values(taskMap);
+        }
+
+        function reloadTask(lecture, kadaiName, btnElement) {
+            if (btnElement.classList.contains('loading')) return;
+            btnElement.classList.add('loading');
+
+            fetch(GAS_URL + '?mode=dashboard')
+                .then(response => response.json())
+                .then(data => {
+                    btnElement.classList.remove('loading');
+                    if (!data || data.length === 0) return;
+
+                    allTasksData = parseTaskData(data);
+                    applyFilters();
+                })
+                .catch(error => {
+                    btnElement.classList.remove('loading');
+                    console.error('個別リロードエラー:', error);
+                });
+        }
+
+        function processData(results) {
+            if (!results || results.length === 0) {
+                document.getElementById('loading').innerHTML = 'データが見つかりませんでした。';
+                return;
+            }
+
+            allTasksData = parseTaskData(results);
+            updateDropdowns(allTasksData);
+            applyFilters();
+        }
+
+        function updateDropdowns(tasks) {
+            const lectureSelect = document.getElementById('lecture-select');
+            const kadaiSelect = document.getElementById('kadai-select');
+
+            const currentLecture = lectureSelect.value;
+            const currentKadai = kadaiSelect.value;
+
+            const lectures = [...new Set(allTasksData.map(t => t.lecture))].sort();
+            lectureSelect.innerHTML = '<option value="すべて">すべて</option>';
+            lectures.forEach(lec => {
+                const opt = document.createElement('option');
+                opt.value = lec;
+                opt.textContent = lec;
+                lectureSelect.appendChild(opt);
+            });
+            lectureSelect.value = lectures.includes(currentLecture) ? currentLecture : 'すべて';
+
+            const filteredByLecture = (lectureSelect.value === 'すべて') 
+                ? allTasksData 
+                : allTasksData.filter(t => t.lecture === lectureSelect.value);
+
+            const kadais = [...new Set(filteredByLecture.map(t => t.kadaiName))].sort();
+            kadaiSelect.innerHTML = '<option value="すべて">すべて</option>';
+            kadais.forEach(kadai => {
+                const opt = document.createElement('option');
+                opt.value = kadai;
+                opt.textContent = kadai;
+                kadaiSelect.appendChild(opt);
+            });
+            kadaiSelect.value = kadais.includes(currentKadai) ? currentKadai : 'すべて';
+        }
+
+        function onLectureChange() {
+            updateDropdowns(allTasksData);
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const selectedLecture = document.getElementById('lecture-select').value;
+            const selectedKadai = document.getElementById('kadai-select').value;
+
+            let filtered = allTasksData.filter(t => {
+                const matchLecture = (selectedLecture === 'すべて' || t.lecture === selectedLecture);
+                const matchKadai = (selectedKadai === 'すべて' || t.kadaiName === selectedKadai);
+                return matchLecture && matchKadai;
+            });
+
+            filtered.sort((a, b) => {
+              let comparison = 0;
+              if (currentSortColumn === 'requirement') {
+                let valA = a.requirement || '';
+                let valB = b.requirement || '';
+                comparison = valA.localeCompare(valB, 'ja');
+              } else if (currentSortColumn === 'status') {
+                comparison = a.submittedCount - b.submittedCount;
+                if (comparison === 0) {
+                  let rateA = a.totalCount > 0 ? (a.submittedCount / a.totalCount) : 0;
+                  let rateB = b.totalCount > 0 ? (b.submittedCount / b.totalCount) : 0;
+                  comparison = rateA - rateB;
+                }
+              } else if (currentSortColumn === 'lecture') {
+                let valA = a.lecture || '';
+                let valB = b.lecture || '';
+                comparison = valA.localeCompare(valB, 'ja');
+              } else if (currentSortColumn === 'deadline') {
+                let valA = a.deadline || '';
+                let valB = b.deadline || '';
+                comparison = valA.localeCompare(valB);
+              } else if (currentSortColumn === 'rate') {
+                let rateA = a.totalCount > 0 ? (a.submittedCount / a.totalCount) : 0;
+                let rateB = b.totalCount > 0 ? (b.submittedCount / b.totalCount) : 0;
+                comparison = rateA - rateB;
+              }
+              return currentSortDirection === 'asc' ? comparison : -comparison;
+            });
+
+            renderDashboard(filtered);
+        }
+
+        function sortTable(column) {
+            if (currentSortColumn === column) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSortColumn = column;
+                currentSortDirection = 'asc';
+            }
+        
+            ['requirement', 'status', 'lecture', 'deadline', 'rate'].forEach(col => {
+              const icon = document.getElementById('sort-icon-' + col);
+              if (icon) icon.textContent = '';
+            });
+        
+            const activeIcon = document.getElementById('sort-icon-' + column);
+            if (activeIcon) {
+                activeIcon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+            }
+        
+            applyFilters();
+        }
+
+        function onStudentSortChange(taskKey, selectElement) {
+            studentSortPreferences[taskKey] = selectElement.value;
+            applyFilters();
+        }
+
+        function onDelayChange() {
+            applyFilters();
+        }
+
+        function sortStudents(students, sortMode) {
+            const sorted = [...students];
+            if (sortMode === 'status_asc') {
+                sorted.sort((a, b) => {
+                    const getPriority = (st) => {
+                        if (!st.isSubmitted && st.status !== '評価不能' && st.status !== '判定不能') return 1;
+                        if (st.status === '評価不能' || st.status === '判定不能') return 2;
+                        return 3;
+                    };
+                    const pA = getPriority(a);
+                    const pB = getPriority(b);
+                    if (pA !== pB) return pA - pB;
+                    const keyA = a.ruby || a.name;
+                    const keyB = b.ruby || b.name;
+                    return keyA.localeCompare(keyB, 'ja');
+                });
+            } else if (sortMode === 'status_desc') {
+                sorted.sort((a, b) => {
+                    const getPriority = (st) => {
+                        if (st.isSubmitted) return 1;
+                        if (st.status === '評価不能' || st.status === '判定不能') return 2;
+                        return 3;
+                    };
+                    const pA = getPriority(a);
+                    const pB = getPriority(b);
+                    if (pA !== pB) return pA - pB;
+                    const keyA = a.ruby || a.name;
+                    const keyB = b.ruby || b.name;
+                    return keyA.localeCompare(keyB, 'ja');
+                });
+            } else {
+                sorted.sort((a, b) => {
+                    const keyA = a.ruby || a.name;
+                    const keyB = b.ruby || b.name;
+                    return keyA.localeCompare(keyB, 'ja');
+                });
+            }
+            return sorted;
+        }
+
+        function renderDashboard(tasks) {
+            renderDesktopTable(tasks);
+            renderMobileCards(tasks);
+            setTimeout(() => {
+                animateProgressBars();
+            }, 1000);
+        }
+
+        function generateStudentCardsHtml(task, taskKey) {
+            const currentSortMode = studentSortPreferences[taskKey] || 'name';
+            const trimmedFolderId = task.folderId ? task.folderId.trim() : '';
+            const delayStep = parseFloat(document.getElementById('delay-select')?.value || 0.3);
+
+            let html = '';
+
+            html += '<div class="student-controls-bar">';
+            
+            html += '<div class="student-header-left">';
+            html += '<div class="detail-title"><span>「' + escapeHtml(task.kadaiName) + '」の学生別提出状況</span></div>';
+            
+            html += '<button class="reload-btn" onclick="event.stopPropagation(); reloadTask(\'' + escapeHtml(task.lecture) + '\', \'' + escapeHtml(task.kadaiName) + '\', this);" title="この課題の状況を再取得">';
+            html += '<svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>';
+            html += '再取得';
+            html += '</button>';
+
+            html += '</div>';
+
+            html += '<div class="student-header-right">';
+            
+            if (trimmedFolderId !== '' && trimmedFolderId !== '-') {
+                const folderUrl = 'https://drive.google.com/drive/folders/' + encodeURIComponent(trimmedFolderId);
+                html += '<a href="' + folderUrl + '" target="_blank" class="folder-link-btn" onclick="event.stopPropagation();">';
+                html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
+                html += 'Googleドライブのフォルダを開く';
+                html += '</a>';
+            }
+
+            html += '<div class="student-sort-group">';
+            html += '<label for="student-sort-' + escapeHtml(taskKey) + '">並べ替え:</label>';
+            html += '<select id="student-sort-' + escapeHtml(taskKey) + '" class="student-sort-select" onchange="onStudentSortChange(\'' + escapeHtml(taskKey) + '\', this)">';
+            html += '<option value="name"' + (currentSortMode === 'name' ? ' selected' : '') + '>氏名順</option>';
+            html += '<option value="status_asc"' + (currentSortMode === 'status_asc' ? ' selected' : '') + '>提出状況順 (昇順)</option>';
+            html += '<option value="status_desc"' + (currentSortMode === 'status_desc' ? ' selected' : '') + '>提出状況順 (降順)</option>';
+            html += '</select>';
+            html += '</div>';
+
+            html += '</div>';
+
+            html += '</div>';
+
+            html += '<div class="student-cards-grid" id="student-grid-' + escapeHtml(taskKey) + '">';
+            const sortedStudents = sortStudents(task.students, currentSortMode);
+
+            sortedStudents.forEach((st, stIdx) => {
+                let cardClass = 'student-card unsubmitted anim-playing';
+                let badge = '<span class="badge-unsubmitted">未提出</span>';
+
+                if (st.status === '評価不能' || st.status === '判定不能') {
+                    cardClass = 'student-card unknown anim-playing';
+                    badge = '<span class="badge-unknown">評価不能</span>';
+                } else if (st.isSubmitted) {
+                    cardClass = 'student-card submitted anim-playing';
+                    badge = '<span class="badge-submitted">提出済み</span>';
+                }
+
+                if (st.fileNames && st.fileNames.length > 1) {
+                    cardClass += ' has-multiple';
+                    badge += '<div class="file-count-badge">' + st.fileNames.length + '</div>';
+                }
+
+                if (stIdx < 6) {
+                    cardClass += ' tooltip-down';
+                }
+
+                let fileDisplay = 'なし';
+                if (st.fileNames && st.fileNames.length > 0) {
+                    fileDisplay = '\n・' + st.fileNames.join('\n・');
+                }
+                let tooltipHtml = '学生名: ' + escapeHtml(st.name) + '\nよみ: ' + escapeHtml(st.ruby || '-') + '\n提出確認日: ' + escapeHtml(st.submitDateStr || '-') + '\n提出ファイル: ' + escapeHtml(fileDisplay);
+
+                const animationDelay = (stIdx * delayStep).toFixed(2);
+
+                html += '<div class="' + cardClass + '" style="animation-delay: ' + animationDelay + 's;">';
+                html += '<div class="card-tooltip">' + tooltipHtml + '</div>';
+                html += '<div class="student-info-wrapper">';
+                if (st.ruby) {
+                    html += '<div class="student-card-ruby">' + escapeHtml(st.ruby) + '</div>';
+                }
+                html += '<div><span class="student-card-name" title="' + escapeHtml(st.name) + '">' + escapeHtml(st.name) + '</span></div>';
+                html += '<div class="student-card-date">' + escapeHtml(st.submitDateStr || '-') + '</div>';
+                html += '</div>';
+                html += badge;
+                html += '</div>';
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderDesktopTable(tasks) {
+            const tbody = document.getElementById('dashboard-body');
+            let html = '';
+
+            if (tasks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">該当するデータが見つかりませんでした。</td></tr>';
+                document.getElementById('dashboard-table').style.display = 'table';
+                return;
+            }
+
+            tasks.forEach((task, index) => {
+                const percentage = task.totalCount > 0 ? Math.round((task.submittedCount / task.totalCount) * 100) : 0;
+                let reqClass = (task.requirement && (task.requirement.includes('必') || task.requirement.includes('必須'))) ? 'color: var(--req-color); font-weight: 700;' : 'color: var(--text-muted);';
+                let formattedLecture = escapeHtml(task.lecture).replace(/\(/g, '<wbr>(').replace(/（/g, '<wbr>（');
+
+                const rowId = 'detail-row-' + index;
+                const mainRowId = 'main-row-' + index;
+                const taskKey = task.lecture + '_' + task.kadaiName;
+                const isExpanded = expandedRowKeys.has(taskKey);
+
+                const mainRowClass = isExpanded ? 'clickable-row expanded' : 'clickable-row';
+                const detailRowClass = isExpanded ? 'detail-row active' : 'detail-row';
+
+                html += '<tr class="' + mainRowClass + '" id="' + mainRowId + '" onclick="toggleDetail(\'' + rowId + '\', \'' + mainRowId + '\', \'' + escapeHtml(taskKey) + '\')">';
+                html += '<td class="td-lecture">' + formattedLecture + '</td>';
+                html += '<td style="font-weight: 700;">' + escapeHtml(task.kadaiName) + '</td>';
+                html += '<td style="color: var(--text-muted);">' + escapeHtml(task.deadline) + '</td>';
+                html += '<td class="td-requirement"><span style="' + reqClass + '">' + escapeHtml(task.requirement) + '</span></td>';
+                
+                html += '<td class="td-status">';
+                html += '<span class="submitted-num">' + task.submittedCount + '</span>';
+                html += '<span style="color: var(--text-muted); margin: 0 4px;">/</span>';
+                html += '<span class="total-num">' + task.totalCount + '人</span>';
+                html += '</td>';
+
+                html += '<td style="text-align: center;">';
+                html += '<div class="progress-bar-container"><div class="progress-bar-fill" style="width: 0%;" data-percentage="' + percentage + '"></div></div>';
+                html += '<span style="font-weight: 700; font-size: 14px;">' + percentage + '%</span>';
+                html += '</td>';
+                html += '</tr>';
+
+                html += '<tr class="' + detailRowClass + '" id="' + rowId + '">';
+                html += '<td colspan="6" class="detail-cell">';
+                html += '<div class="detail-box">';
+                
+                html += generateStudentCardsHtml(task, taskKey);
+
+                html += '</div>';
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('dashboard-table').style.display = 'table';
+            setTimeout(adjustCardNames, 10);
+        }
+
+        function renderMobileCards(tasks) {
+            const container = document.getElementById('mobile-cards-container');
+            let html = '';
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 30px;">該当するデータが見つかりませんでした。</div>';
+                return;
+            }
+
+            tasks.forEach((task, index) => {
+                const percentage = task.totalCount > 0 ? Math.round((task.submittedCount / task.totalCount) * 100) : 0;
+                let reqClass = (task.requirement && (task.requirement.includes('必') || task.requirement.includes('必須'))) ? 'color: var(--req-color); font-weight: 700;' : 'color: var(--text-muted);';
+                
+                const taskKey = task.lecture + '_' + task.kadaiName;
+                const isExpanded = expandedRowKeys.has(taskKey);
+                const containerClass = isExpanded ? 'mobile-students-container active' : 'mobile-students-container';
+                const btnText = isExpanded ? '学生別状況を閉じる ▲' : '学生別状況を開く ▼';
+
+                html += '<div class="mobile-task-card">';
+                html += '<div class="mobile-task-lecture">' + escapeHtml(task.lecture) + '</div>';
+                html += '<div class="mobile-task-header"><h3 class="mobile-task-title">' + escapeHtml(task.kadaiName) + '</h3>';
+                html += '<span style="' + reqClass + ' font-size: 12px; white-space: nowrap;">' + escapeHtml(task.requirement) + '</span></div>';
+                
+                html += '<div class="mobile-task-info">';
+                html += '<span>期限: ' + escapeHtml(task.deadline) + '</span>';
+                
+                const trimmedFolderId = task.folderId ? task.folderId.trim() : '';
+                if (trimmedFolderId !== '' && trimmedFolderId !== '-') {
+                    const folderUrl = 'https://drive.google.com/drive/folders/' + encodeURIComponent(trimmedFolderId);
+                    html += '<a href="' + folderUrl + '" target="_blank" class="folder-link-btn" style="padding: 4px 8px; font-size: 11px;">ドライブを開く</a>';
+                }
+                html += '</div>';
+
+                html += '<div class="mobile-progress-row">';
+                html += '<div class="mobile-progress-text">提出状況: <strong class="submitted-num">' + task.submittedCount + '</strong> / ' + task.totalCount + '人 (' + percentage + '%)</div>';
+                html += '<div class="mobile-progress-bar-container"><div class="progress-bar-fill" style="width: 0%;" data-percentage="' + percentage + '"></div></div>';
+                html += '</div>';
+
+                html += '<button class="mobile-toggle-btn" onclick="toggleMobileDetail(\'' + escapeHtml(taskKey) + '\')">' + btnText + '</button>';
+
+                html += '<div class="' + containerClass + '" id="mobile-detail-' + index + '">';
+                
+                html += generateStudentCardsHtml(task, taskKey);
+
+                html += '</div>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+            setTimeout(adjustCardNames, 10);
+        }
+
+        function animateProgressBars() {
+            document.querySelectorAll('.progress-bar-fill').forEach(bar => {
+                const targetWidth = bar.getAttribute('data-percentage');
+                if (targetWidth) {
+                    bar.style.width = targetWidth + '%';
+                }
+            });
+        }
+
+        function adjustCardNames() {
+            document.querySelectorAll('.student-card-name').forEach(el => {
+                const parent = el.parentElement;
+                if (el.scrollWidth > parent.clientWidth && parent.clientWidth > 0) {
+                    const scale = parent.clientWidth / el.scrollWidth;
+                    el.style.transform = `scaleX(${scale})`;
+                } else {
+                    el.style.transform = 'scaleX(1)';
+                }
+            });
+        }
+
+        function toggleDetail(rowId, mainRowId, taskKey) {
+            const detailRow = document.getElementById(rowId);
+            const mainRow = document.getElementById(mainRowId);
+
+            if (detailRow.classList.contains('active')) {
+                detailRow.classList.remove('active');
+                mainRow.classList.remove('expanded');
+                expandedRowKeys.delete(taskKey);
+            } else {
+                detailRow.classList.add('active');
+                mainRow.classList.add('expanded');
+                expandedRowKeys.add(taskKey);
+                setTimeout(adjustCardNames, 10);
+            }
+        }
+
+        function toggleMobileDetail(taskKey) {
+            if (expandedRowKeys.has(taskKey)) {
+                expandedRowKeys.delete(taskKey);
+            } else {
+                expandedRowKeys.add(taskKey);
+            }
+            applyFilters();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
 </body>
 </html>
