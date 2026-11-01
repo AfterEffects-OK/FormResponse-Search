@@ -22,7 +22,6 @@
             --req-color: #0369a1;
         }
 
-        /* ダークモード時のカラー定義 (body.dark-mode クラスに連動) */
         body.dark-mode {
             --primary: #10b981;
             --primary-hover: #059669;
@@ -57,14 +56,14 @@
             transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
         
-        /* 最上部ヘッダーエリア：タイトルとコントロールバーを同一行に配置 */
         .header-top-flex {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
+            align-items: center;
+            flex-wrap: nowrap;
             gap: 16px;
             margin-bottom: 24px;
+            position: relative;
             transition: all 0.3s ease;
         }
         .header-top-flex.all-hidden {
@@ -91,9 +90,28 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 8px;
+            flex-wrap: nowrap;
         }
+
+        .hamburger-btn {
+            display: none;
+            background: var(--filter-bg);
+            border: 1px solid var(--border-color);
+            color: var(--btn-text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .hamburger-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
         .control-btn {
             background: var(--filter-bg);
             border: 1px solid var(--border-color);
@@ -106,6 +124,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
             transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
         .control-btn:hover {
@@ -113,7 +132,6 @@
             color: var(--primary);
         }
 
-        /* ディレイ切替用セレクトのコンポーネント */
         .delay-select-group {
             display: flex;
             align-items: center;
@@ -125,6 +143,7 @@
             font-size: 13px;
             font-weight: 600;
             color: var(--btn-text);
+            white-space: nowrap;
         }
         .delay-select-group select {
             background: var(--card-bg);
@@ -153,6 +172,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
             transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
         }
         .theme-toggle-btn:hover {
@@ -167,6 +187,43 @@
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+
+        .controls-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            padding: 12px;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            min-width: 220px;
+        }
+        .controls-dropdown.active {
+            display: flex !important;
+        }
+        .controls-dropdown .control-btn,
+        .controls-dropdown .theme-toggle-btn,
+        .controls-dropdown .delay-select-group {
+            width: 100%;
+            justify-content: flex-start;
+            box-sizing: border-box;
+        }
+
+        @media screen and (max-width: 1050px) {
+            .controls-bar > .control-btn,
+            .controls-bar > .delay-select-group,
+            .controls-bar > .theme-toggle-btn {
+                display: none !important;
+            }
+            .hamburger-btn {
+                display: flex !important;
+            }
         }
 
         .filter-section {
@@ -431,10 +488,17 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            opacity: 0; /* 初期状態は非表示 */
+            opacity: 0;
+            z-index: 1;
+            transition: z-index 0s ease 0.2s;
         }
 
-        /* アニメーション再生中クラス */
+        .student-card:hover,
+        .student-card.has-multiple:hover {
+            z-index: 999 !important;
+            transition: z-index 0s ease 0s;
+        }
+
         .student-card.anim-playing {
             animation: dropDownCard 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -501,8 +565,8 @@
             font-weight: 500;
             white-space: pre;
             line-height: 1.5;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            z-index: 10000 !important;
             transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
             pointer-events: none;
         }
@@ -710,9 +774,6 @@
             p.subtitle {
                 font-size: 12px;
             }
-            .controls-bar {
-                display: none;
-            }
             .filter-section {
                 flex-direction: column;
                 gap: 12px;
@@ -855,11 +916,11 @@
         <div id="header-top-container" class="header-top-flex">
             <div id="header-area" class="header-content-wrapper">
                 <h2>課題別 提出状況ダッシュボード</h2>
-                <p class="subtitle">課題をタップすると 学生ごとの提出状況が展開されます</p>
+                <p class="subtitle">各課題のカードをタップすると、学生ごとの提出状況が展開されます。</p>
             </div>
             
-            <div class="controls-bar">
-                <!-- モード切り替えボタンをコントロールバーの先頭（一番左側＝全体の中では最上部・右側エリアの先頭）に移動 -->
+            <div class="controls-bar" style="position: relative;">
+                <!-- 配置順変更：ディレイ → タイトル非表示 → フィルター非表示 → モード切り替え -->
                 <div class="delay-select-group">
                     <label for="delay-select">ディレイ:</label>
                     <select id="delay-select" onchange="onDelayChange()">
@@ -870,19 +931,46 @@
                         <option value="0.7">超ゆっくり (0.7秒)</option>
                     </select>
                 </div>
-
                 <button id="toggle-header-btn" class="control-btn" onclick="toggleHeader()">
                     <span>タイトルを非表示</span>
                 </button>
                 <button id="toggle-filter-btn" class="control-btn" onclick="toggleFilter()">
                     <span>検索・フィルターを非表示</span>
                 </button>
-
                 <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
                     <svg id="theme-icon" viewBox="0 0 24 24"></svg>
                     <span id="theme-text">ダークモード</span>
                 </button>
 
+                <!-- ハンバーガーメニューボタン -->
+                <button id="hamburger-menu-btn" class="hamburger-btn" type="button" onclick="toggleHamburgerMenu(event)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <span>メニュー</span>
+                </button>
+
+                <!-- ハンバーガーメニュー内のドロップダウン（同様に配置順を統一） -->
+                <div id="controls-dropdown" class="controls-dropdown">
+                    <div class="delay-select-group">
+                        <label for="delay-select-drop">ディレイ:</label>
+                        <select id="delay-select-drop" onchange="syncDelay(this.value)">
+                            <option value="0.01">高速 (0.01秒)</option>
+                            <option value="0.03">標準 (0.03秒)</option>
+                            <option value="0.1">ややゆっくり (0.1秒)</option>
+                            <option value="0.3" selected>ゆっくり (0.3秒)</option>
+                            <option value="0.7">超ゆっくり (0.7秒)</option>
+                        </select>
+                    </div>
+                    <button id="toggle-header-btn-drop" class="control-btn" type="button" onclick="toggleHeader(); closeHamburgerMenu();">
+                        <span>タイトルを非表示</span>
+                    </button>
+                    <button id="toggle-filter-btn-drop" class="control-btn" type="button" onclick="toggleFilter(); closeHamburgerMenu();">
+                        <span>検索・フィルターを非表示</span>
+                    </button>
+                    <button id="theme-toggle-drop" class="theme-toggle-btn" type="button" onclick="document.getElementById('theme-toggle').click(); closeHamburgerMenu();" title="表示モード切替">
+                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <span id="theme-text-drop">ダークモード</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -930,6 +1018,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const themeText = document.getElementById('theme-text');
+        const themeTextDrop = document.getElementById('theme-text-drop');
         const moonPath = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
         const sunPath = "M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z";
         
@@ -941,10 +1030,12 @@
                 document.body.classList.add('dark-mode');
                 themeIcon.innerHTML = `<path d="${sunPath}"/>`;
                 themeText.textContent = 'ライトモード';
+                if (themeTextDrop) themeTextDrop.textContent = 'ライトモード';
             } else {
                 document.body.classList.remove('dark-mode');
                 themeIcon.innerHTML = `<path d="${moonPath}"/>`;
                 themeText.textContent = 'ダークモード';
+                if (themeTextDrop) themeTextDrop.textContent = 'ダークモード';
             }
         }
         
@@ -961,6 +1052,37 @@
             if (!localStorage.getItem('theme')) {
                 applyTheme(e.matches);
             }
+        });
+
+        function toggleHamburgerMenu(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('controls-dropdown');
+            dropdown.classList.toggle('active');
+        }
+        function closeHamburgerMenu() {
+            const dropdown = document.getElementById('controls-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+        }
+
+        window.addEventListener('click', function(e) {
+            const btn = document.getElementById('hamburger-menu-btn');
+            const dropdown = document.getElementById('controls-dropdown');
+            if (dropdown && dropdown.classList.contains('active')) {
+                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                    closeHamburgerMenu();
+                }
+            }
+        });
+
+        function syncDelay(val) {
+            document.getElementById('delay-select').value = val;
+            onDelayChange();
+        }
+        document.getElementById('delay-select').addEventListener('change', (e) => {
+            const dropSelect = document.getElementById('delay-select-drop');
+            if (dropSelect) dropSelect.value = e.target.value;
         });
 
         function checkAllHiddenState() {
@@ -981,24 +1103,22 @@
         function toggleHeader() {
             const headerArea = document.getElementById('header-area');
             const btn = document.getElementById('toggle-header-btn');
+            const btnDrop = document.getElementById('toggle-header-btn-drop');
             headerArea.classList.toggle('collapsed');
-            if (headerArea.classList.contains('collapsed')) {
-                btn.querySelector('span').textContent = 'タイトルを表示';
-            } else {
-                btn.querySelector('span').textContent = 'タイトルを非表示';
-            }
+            const text = headerArea.classList.contains('collapsed') ? 'タイトルを表示' : 'タイトルを非表示';
+            btn.querySelector('span').textContent = text;
+            if (btnDrop) btnDrop.querySelector('span').textContent = text;
             checkAllHiddenState();
         }
 
         function toggleFilter() {
             const filterArea = document.getElementById('filter-area');
             const btn = document.getElementById('toggle-filter-btn');
+            const btnDrop = document.getElementById('toggle-filter-btn-drop');
             filterArea.classList.toggle('collapsed');
-            if (filterArea.classList.contains('collapsed')) {
-                btn.querySelector('span').textContent = '検索・フィルターを表示';
-            } else {
-                btn.querySelector('span').textContent = '検索・フィルターを非表示';
-            }
+            const text = filterArea.classList.contains('collapsed') ? '検索・フィルターを表示' : '検索・フィルターを非表示';
+            btn.querySelector('span').textContent = text;
+            if (btnDrop) btnDrop.querySelector('span').textContent = text;
             checkAllHiddenState();
         }
 
