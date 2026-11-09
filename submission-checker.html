@@ -489,10 +489,11 @@
             justify-content: space-between;
             align-items: center;
             opacity: 0;
-            z-index: 1;
-            transition: z-index 0s ease 0.2s;
+            z-index: 1; /* 通常時の重なり順ベース */
+            transition: z-index 0s ease 0.2s; /* ホバー解除時に遅延してz-indexを戻す */
         }
 
+        /* ★ 修正：ホバー時や複数ファイル持ちの場合にカード自体の z-index を最前面（999）に引き上げる */
         .student-card:hover,
         .student-card.has-multiple:hover {
             z-index: 999 !important;
@@ -549,6 +550,7 @@
             z-index: 10;
         }
 
+        /* ★ 修正：ツールチップの z-index を超高水準 (10000) に設定し、絶対にはみ出し・背後に入り込まないようにする */
         .student-card .card-tooltip {
             visibility: hidden;
             opacity: 0;
@@ -916,11 +918,14 @@
         <div id="header-top-container" class="header-top-flex">
             <div id="header-area" class="header-content-wrapper">
                 <h2>課題別 提出状況ダッシュボード</h2>
-                <p class="subtitle">課題をタップすると 学生ごとの提出状況が展開されます</p>
+                <p class="subtitle">各課題のカードをタップすると、学生ごとの提出状況が展開されます。</p>
             </div>
             
             <div class="controls-bar" style="position: relative;">
-                <!-- 配置順変更：ディレイ → タイトル非表示 → フィルター非表示 → モード切り替え -->
+                <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
+                    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
+                    <span id="theme-text">ダークモード</span>
+                </button>
                 <div class="delay-select-group">
                     <label for="delay-select">ディレイ:</label>
                     <select id="delay-select" onchange="onDelayChange()">
@@ -937,19 +942,17 @@
                 <button id="toggle-filter-btn" class="control-btn" onclick="toggleFilter()">
                     <span>検索・フィルターを非表示</span>
                 </button>
-                <button id="theme-toggle" class="theme-toggle-btn" title="表示モード切替">
-                    <svg id="theme-icon" viewBox="0 0 24 24"></svg>
-                    <span id="theme-text">ダークモード</span>
-                </button>
 
-                <!-- ハンバーガーメニューボタン -->
                 <button id="hamburger-menu-btn" class="hamburger-btn" type="button" onclick="toggleHamburgerMenu(event)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     <span>メニュー</span>
                 </button>
 
-                <!-- ハンバーガーメニュー内のドロップダウン（同様に配置順を統一） -->
                 <div id="controls-dropdown" class="controls-dropdown">
+                    <button id="theme-toggle-drop" class="theme-toggle-btn" type="button" onclick="document.getElementById('theme-toggle').click(); closeHamburgerMenu();" title="表示モード切替">
+                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <span id="theme-text-drop">ダークモード</span>
+                    </button>
                     <div class="delay-select-group">
                         <label for="delay-select-drop">ディレイ:</label>
                         <select id="delay-select-drop" onchange="syncDelay(this.value)">
@@ -965,10 +968,6 @@
                     </button>
                     <button id="toggle-filter-btn-drop" class="control-btn" type="button" onclick="toggleFilter(); closeHamburgerMenu();">
                         <span>検索・フィルターを非表示</span>
-                    </button>
-                    <button id="theme-toggle-drop" class="theme-toggle-btn" type="button" onclick="document.getElementById('theme-toggle').click(); closeHamburgerMenu();" title="表示モード切替">
-                        <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                        <span id="theme-text-drop">ダークモード</span>
                     </button>
                 </div>
             </div>
@@ -1000,8 +999,9 @@
                     <tr>
                         <th class="sortable" onclick="sortTable('lecture')">科目名 <span id="sort-icon-lecture"></span></th>
                         <th>課題タイトル</th>
-                        <th class="sortable" onclick="sortTable('deadline')">提出期限 <span id="sort-icon-deadline"></span></th>
-                        <th class="sortable" onclick="sortTable('requirement')">区分 <span id="sort-icon-requirement">▲</span></th>
+                        <th class="sortable" onclick="sortTable('deadline')">提出期限 <span id="sort-icon-deadline">▼</span></th>
+                        <!-- 区分側の ▲ は削除または移動します -->
+                        <th class="sortable" onclick="sortTable('requirement')">区分 <span id="sort-icon-requirement"></span></th>
                         <th class="sortable" style="text-align: center;" onclick="sortTable('status')">提出状況 (提出数 / 対象者数) <span id="sort-icon-status"></span></th>
                         <th class="sortable" style="text-align: center;" onclick="sortTable('rate')">提出率 <span id="sort-icon-rate"></span></th>
                     </tr>
@@ -1125,8 +1125,8 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbx3nekLkhBtP8owIsAh_cnXWFqmVHAr7qepJXaTXnJirCm-hykjdOevsV238RN9iYtXyg/exec';
 
         let allTasksData = [];
-        let currentSortColumn = 'requirement';
-        let currentSortDirection = 'asc';
+        let currentSortColumn = 'deadline';        // 初期ソート列を 'deadline' (提出期限) に変更
+        let currentSortDirection = 'desc';         // 初期ソート方向を 'desc' (降順) に変更
         let expandedRowKeys = new Set();
         let studentSortPreferences = {};
 
